@@ -22,7 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   onQuickReconcile,
   isRunning = false,
 }) => {
-  const { user, setIsLoginModalOpen } = useAuth();
+  const { user, setIsLoginModalOpen, activeMode, switchMode } = useAuth();
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between transition-colors">
       <div className="flex items-center space-x-3.5">
@@ -58,6 +58,30 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center space-x-2.5 sm:space-x-3">
+        {/* Mode Switcher Pill (Personal vs Family) */}
+        <div className="hidden sm:inline-flex p-0.5 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+          <button
+            onClick={() => switchMode('personal')}
+            className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center gap-1.5 ${
+              activeMode === 'personal'
+                ? 'bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            👤 Personal
+          </button>
+          <button
+            onClick={() => switchMode('family')}
+            className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center gap-1.5 ${
+              activeMode === 'family'
+                ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            👨‍👩‍👧‍👦 Family
+          </button>
+        </div>
+
         {/* Security & Idempotency Badge */}
         <div className="hidden md:flex items-center space-x-2 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3.5 py-1.5 text-xs text-slate-600 dark:text-slate-400">
           <ShieldCheck className="h-4 w-4 text-emerald-500" />

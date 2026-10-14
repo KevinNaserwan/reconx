@@ -17,10 +17,9 @@ public class AuthController : ControllerBase
     [HttpPost("google")]
     public IActionResult GoogleLogin([FromBody] GoogleAuthRequest request)
     {
-        // Fallback default profile if mock/one-tap is used
         var email = !string.IsNullOrWhiteSpace(request.Email) 
             ? request.Email 
-            : "kevin.naserwan@reconx.io";
+            : "kevin.naserwan@gmail.com";
 
         var name = !string.IsNullOrWhiteSpace(request.Name) 
             ? request.Name 
@@ -32,7 +31,7 @@ public class AuthController : ControllerBase
 
         // Generate enterprise session JWT / Bearer token
         var dummyJwt = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(
-            $"{{\"sub\":\"{email}\",\"name\":\"{name}\",\"role\":\"Lead Fintech Architect\",\"exp\":{DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds()}}}"
+            $"{{\"sub\":\"{email}\",\"name\":\"{name}\",\"role\":\"Head of Household\",\"exp\":{DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds()}}}"
         ));
 
         return Ok(new
@@ -41,11 +40,14 @@ public class AuthController : ControllerBase
             token = $"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.{dummyJwt}.reconx_signature_verified",
             user = new
             {
+                id = "usr-kevin-001",
                 email,
                 name,
                 picture,
-                role = "Fintech Lead Architect",
-                tenant = "PTBA Fin-Treasury"
+                role = "Head of Household",
+                familyId = "fam-kevin-001",
+                familyName = "Keluarga Kevin & Istri",
+                familyInviteCode = "FAM-KVN-8821"
             }
         });
     }
@@ -55,10 +57,14 @@ public class AuthController : ControllerBase
     {
         return Ok(new
         {
-            email = "kevin.naserwan@reconx.io",
+            id = "usr-kevin-001",
+            email = "kevin.naserwan@gmail.com",
             name = "Kevin Naserwan",
-            role = "Fintech Lead Architect",
-            tenant = "PTBA Fin-Treasury",
+            picture = "https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin",
+            role = "Head of Household",
+            familyId = "fam-kevin-001",
+            familyName = "Keluarga Kevin & Istri",
+            familyInviteCode = "FAM-KVN-8821",
             authenticatedVia = "Google OAuth 2.0"
         });
     }

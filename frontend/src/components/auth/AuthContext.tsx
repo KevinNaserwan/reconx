@@ -4,34 +4,48 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/lib/api';
 
 export interface UserProfile {
+  id: string;
   name: string;
   email: string;
   picture: string;
   role: string;
   tenant: string;
+  familyId?: string;
+  familyName?: string;
+  familyInviteCode?: string;
+  activeMode: 'personal' | 'family';
   token?: string;
 }
 
 interface AuthContextType {
   user: UserProfile | null;
   isLoading: boolean;
+  activeMode: 'personal' | 'family';
+  switchMode: (mode: 'personal' | 'family') => void;
   loginWithGoogle: (customData?: Partial<UserProfile>) => Promise<void>;
   logout: () => void;
   isLoginModalOpen: boolean;
   setIsLoginModalOpen: (open: boolean) => void;
 }
 
-const defaultUser: UserProfile = {
+export const defaultUser: UserProfile = {
+  id: 'usr-kevin-001',
   name: 'Kevin Naserwan',
-  email: 'kevin.naserwan@reconx.io',
+  email: 'kevin.naserwan@gmail.com',
   picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin',
-  role: 'Fintech Lead Architect',
-  tenant: 'PTBA Fin-Treasury',
+  role: 'Head of Household (Suami)',
+  tenant: 'Keluarga Kevin & Istri',
+  familyId: 'fam-kevin-001',
+  familyName: 'Keluarga Kevin & Istri',
+  familyInviteCode: 'FAM-KVN-8821',
+  activeMode: 'family',
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
+  activeMode: 'family',
+  switchMode: () => {},
   loginWithGoogle: async () => {},
   logout: () => {},
   isLoginModalOpen: false,
@@ -42,14 +56,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [activeMode, setActiveMode] = useState<'personal' | 'family'>('family');
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem('reconx_auth_user');
       if (stored) {
-        setUser(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        setUser(parsed);
+        if (parsed.activeMode) {
+          setActiveMode(parsed.activeMode);
+        }
       } else {
-        // Initial active session for seamless demo
+        // First load defaults to verified Kevin Naserwan profile
         setUser(defaultUser);
         localStorage.setItem('reconx_auth_user', JSON.stringify(defaultUser));
       }
@@ -60,15 +79,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const switchMode = (mode: 'personal' | 'family') => {
+    setActiveMode(mode);
+    if (user) {
+      const updated = { ...user, activeMode: mode };
+      setUser(updated);
+      localStorage.setItem('reconx_auth_user', JSON.stringify(updated));
+    }
+  };
+
   const loginWithGoogle = async (customData?: Partial<UserProfile>) => {
     setIsLoading(true);
     try {
-      const profile = {
+      const profile: UserProfile = {
+        id: customData?.id || 'usr-kevin-001',
         name: customData?.name || 'Kevin Naserwan',
-        email: customData?.email || 'kevin.naserwan@reconx.io',
+        email: customData?.email || 'kevin.naserwan@gmail.com',
         picture: customData?.picture || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin',
-        role: 'Fintech Lead Architect',
-        tenant: 'PTBA Fin-Treasury',
+        role: 'Head of Household (Suami)',
+        tenant: 'Keluarga Kevin & Istri',
+        familyId: 'fam-kevin-001',
+        familyName: 'Keluarga Kevin & Istri',
+        familyInviteCode: 'FAM-KVN-8821',
+        activeMode: activeMode,
       };
 
       // Call backend Google Auth endpoint
@@ -109,6 +142,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         isLoading,
+        activeMode,
+        switchMode,
         loginWithGoogle,
         logout,
         isLoginModalOpen,

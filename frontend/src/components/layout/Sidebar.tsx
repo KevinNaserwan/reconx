@@ -15,6 +15,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Smartphone,
+  Users,
   X
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
@@ -45,6 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       group: 'OPERATIONAL CLEARING',
       items: [
         { id: 'overview', label: 'Executive Dashboard', icon: BarChart3 },
+        { id: 'family-mode', label: 'Mode Family (Dompet)', icon: Users, badge: 'Family' },
         { id: 'workbench', label: 'Recon Workbench', icon: ArrowLeftRight },
         { 
           id: 'exceptions', 
@@ -173,30 +175,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
-        {/* Tenant Switcher Simulation */}
+        {/* Household Tenant Cluster */}
         <div className={`pt-3.5 pb-2 transition-all ${isCollapsedDesktop ? 'px-2' : 'px-3.5'}`}>
           {isCollapsedDesktop ? (
             <div 
-              className="flex items-center justify-center h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-emerald-600 dark:text-emerald-400 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Tenant Cluster: PTBA Fin-Treasury (IDR Multibank Cluster)"
+              className="flex items-center justify-center h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-indigo-500 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Household Cluster: Keluarga Kevin & Istri"
               onClick={() => setIsCollapsedDesktop(false)}
             >
-              <Building2 className="h-5 w-5" />
+              <Users className="h-5 w-5" />
             </div>
           ) : (
-            <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3 text-xs">
+            <div className="flex items-center justify-between rounded-xl border border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 p-3 text-xs">
               <div className="flex items-center space-x-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold">
-                  <Building2 className="h-4.5 w-4.5" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 font-bold">
+                  <Users className="h-4.5 w-4.5" />
                 </div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm leading-tight">
-                    PTBA Fin-Treasury
+                    {user?.tenant || 'Keluarga Kevin & Istri'}
                   </p>
-                  <p className="text-xs text-slate-400 font-medium mt-0.5">IDR Multibank Cluster</p>
+                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">Household Financial Cluster</p>
                 </div>
               </div>
-              <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" title="Live Cluster Active" />
+              <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" title="Multi-Tenant Sync Active" />
             </div>
           )}
         </div>
