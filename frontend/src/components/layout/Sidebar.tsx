@@ -153,14 +153,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
 
               <div className="flex items-center space-x-1">
-                {/* Desktop Collapse Trigger */}
-                <button
-                  onClick={() => setIsCollapsedDesktop(true)}
-                  className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
-                  title="Collapse to Mini Rail"
-                >
-                  <PanelLeftClose className="h-5 w-5" />
-                </button>
 
                 {/* Mobile Close Trigger */}
                 <button

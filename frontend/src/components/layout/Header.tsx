@@ -59,26 +59,28 @@ export const Header: React.FC<HeaderProps> = ({
 
       <div className="flex items-center space-x-2.5 sm:space-x-3">
         {/* Mode Switcher Pill (Personal vs Family) */}
-        <div className="hidden sm:inline-flex p-0.5 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+        <div className="hidden sm:inline-flex p-1 bg-slate-100 dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner text-xs">
           <button
             onClick={() => switchMode('personal')}
-            className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
               activeMode === 'personal'
-                ? 'bg-white dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25 scale-[1.02]'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            👤 Personal
+            <span>👤</span>
+            <span>Personal</span>
           </button>
           <button
             onClick={() => switchMode('family')}
-            className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
               activeMode === 'family'
-                ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 text-white shadow-md shadow-indigo-500/25 scale-[1.02]'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            👨‍👩‍👧‍👦 Family
+            <span>👨‍👩‍👧‍👦</span>
+            <span>Family</span>
           </button>
         </div>
 

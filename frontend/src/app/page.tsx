@@ -30,14 +30,14 @@ import {
 
 const fallbackMetrics: DashboardMetrics = {
   kpis: {
-    totalInternalVolume: 117070000,
-    totalInternalCount: 14,
-    totalProviderVolume: 117070000,
-    totalProviderCount: 14,
+    totalInternalVolume: 0,
+    totalInternalCount: 0,
+    totalProviderVolume: 0,
+    totalProviderCount: 0,
     overallMatchRate: 100.00,
     openExceptionsCount: 0,
     totalDiscrepancyAmount: 0,
-    totalRuns: 3
+    totalRuns: 0
   },
   discrepancyBreakdown: [],
   providers: [
@@ -48,26 +48,7 @@ const fallbackMetrics: DashboardMetrics = {
   ]
 };
 
-const fallbackRuns: ReconciliationRunItem[] = [
-  {
-    runId: 'demo-run-001',
-    runNumber: 'REC-20261014-HOUSEHOLD',
-    providerCode: 'BLU_BCA',
-    providerName: 'blu by BCA Digital & Multibank',
-    cutoffStart: '2026-10-14T00:00:00Z',
-    cutoffEnd: '2026-10-14T23:59:59Z',
-    totalProcessed: 14,
-    totalMatched: 14,
-    totalDiscrepancy: 0,
-    matchPercentage: 100.00,
-    totalInternalAmount: 117070000,
-    totalProviderAmount: 117070000,
-    totalDiscrepancyAmount: 0,
-    status: 'COMPLETED',
-    startedAt: '2026-10-14T10:00:00Z',
-    completedAt: '2026-10-14T10:00:02Z'
-  }
-];
+const fallbackRuns: ReconciliationRunItem[] = [];
 
 const fallbackExceptions: ExceptionCaseItem[] = [];
 

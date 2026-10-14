@@ -6,13 +6,97 @@ namespace ReconX.Api.Controllers;
 [Route("api/v1/family")]
 public class FamilyController : ControllerBase
 {
+    // In-memory persistent state for live user session
+    private static readonly List<MemberDto> Members = new()
+    {
+        new MemberDto
+        {
+            Id = "mem-kevin",
+            Name = "Kevin Naserwan",
+            Role = "Suami (Head of Family)",
+            Avatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin",
+            Device = "Belum Terhubung (Menunggu Companion APK)",
+            DeviceStatus = "OFFLINE",
+            IsCurrentProfile = true,
+            Wallets = new List<WalletDto>()
+        }
+    };
+
+    private static readonly List<InternalTransferDto> Transfers = new();
+    private static readonly List<JointBudgetDto> Budgets = new();
+
+    public class WalletDto
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = "BANK"; // BANK, EWALLET, INVEST
+        public string AccountNo { get; set; } = string.Empty;
+        public decimal Balance { get; set; } = 0m;
+        public bool IsShared { get; set; } = true;
+        public string SyncStatus { get; set; } = "MANUAL";
+        public string App { get; set; } = string.Empty;
+        public string Icon { get; set; } = "Wallet";
+    }
+
+    public class MemberDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string Avatar { get; set; } = string.Empty;
+        public string Device { get; set; } = string.Empty;
+        public string DeviceStatus { get; set; } = string.Empty;
+        public bool IsCurrentProfile { get; set; } = false;
+        public List<WalletDto> Wallets { get; set; } = new();
+        public decimal TotalBalance => Wallets.Sum(w => w.Balance);
+    }
+
+    public class InternalTransferDto
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string FromMember { get; set; } = string.Empty;
+        public string ToMember { get; set; } = string.Empty;
+        public string SourceWallet { get; set; } = string.Empty;
+        public string DestinationWallet { get; set; } = string.Empty;
+        public decimal Amount { get; set; } = 0m;
+        public string Category { get; set; } = string.Empty;
+        public string Timestamp { get; set; } = string.Empty;
+        public string Status { get; set; } = "RECONCILED_NON_EXPENSE";
+        public string Notes { get; set; } = string.Empty;
+    }
+
+    public class JointBudgetDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public decimal Allocated { get; set; } = 0m;
+        public decimal Spent { get; set; } = 0m;
+        public decimal Remaining => Math.Max(0, Allocated - Spent);
+        public string Pic { get; set; } = string.Empty;
+    }
+
+    public class AddMemberRequest
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Role { get; set; } = "Anggota"; // Istri, Anak, Orang Tua
+        public string? Email { get; set; }
+    }
+
+    public class AddWalletRequest
+    {
+        public string MemberId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = "BANK";
+        public string AccountNo { get; set; } = string.Empty;
+        public decimal InitialBalance { get; set; } = 0m;
+        public bool IsShared { get; set; } = true;
+    }
+
     public class JoinFamilyRequest
     {
         public string? InviteCode { get; set; }
         public string? MemberName { get; set; }
-        public string? MemberRole { get; set; } // "Suami", "Istri", "Anak", "Orang Tua"
+        public string? MemberRole { get; set; }
         public string? DeviceId { get; set; }
-        public string? Email { get; set; }
     }
 
     public class ToggleWalletShareRequest
@@ -24,74 +108,10 @@ public class FamilyController : ControllerBase
     [HttpGet("summary")]
     public IActionResult GetFamilySummary([FromQuery] string? mode = "family")
     {
-        // Member 1: Kevin Naserwan (Suami / Head)
-        var kevinWallets = new[]
-        {
-            new { id = "w-blu", name = "blu by BCA Digital", type = "BANK", accountNo = "5040182910", balance = 14_850_000m, isShared = true, syncStatus = "LIVE_SYNC", app = "blu BCA", icon = "Landmark" },
-            new { id = "w-super", name = "Superbank Indonesia", type = "BANK", accountNo = "8810294821", balance = 6_200_000m, isShared = false, syncStatus = "LIVE_SYNC", app = "Superbank", icon = "Zap" },
-            new { id = "w-bibit", name = "Bibit Reksadana & SBN", type = "INVEST", accountNo = "BBT-KVN-991", balance = 35_000_000m, isShared = true, syncStatus = "DAILY_AUM", app = "Bibit", icon = "TrendingUp" },
-            new { id = "w-pluang", name = "Pluang US Stocks & Crypto", type = "INVEST", accountNo = "PLG-KVN-301", balance = 22_500_000m, isShared = false, syncStatus = "DAILY_AUM", app = "Pluang", icon = "Coins" },
-            new { id = "w-bareksa", name = "Bareksa Emas Fisik & Sukuk", type = "INVEST", accountNo = "BRK-KVN-102", balance = 12_000_000m, isShared = true, syncStatus = "DAILY_AUM", app = "Bareksa", icon = "Gem" },
-        };
-
-        // Member 2: Istri Kevin (Pasangan / Co-Admin)
-        var istriWallets = new[]
-        {
-            new { id = "w-seabank", name = "SeaBank Indonesia", type = "BANK", accountNo = "9012847192", balance = 18_400_000m, isShared = true, syncStatus = "LIVE_SYNC", app = "SeaBank", icon = "Landmark" },
-            new { id = "w-shopeepay", name = "ShopeePay Balance", type = "EWALLET", accountNo = "081298412891", balance = 1_850_000m, isShared = true, syncStatus = "LIVE_SYNC", app = "ShopeePay", icon = "ShoppingBag" },
-            new { id = "w-tokopedia", name = "Tokopedia / GoPay", type = "EWALLET", accountNo = "081298412891", balance = 820_000m, isShared = true, syncStatus = "LIVE_SYNC", app = "Tokopedia", icon = "ShoppingBag" },
-            new { id = "w-ovo", name = "OVO Cash", type = "EWALLET", accountNo = "081298412891", balance = 450_000m, isShared = false, syncStatus = "LIVE_SYNC", app = "OVO", icon = "Wallet" },
-        };
-
-        // Member 3: Anak (Tabungan Pendidikan & Uang Saku)
-        var anakWallets = new[]
-        {
-            new { id = "w-junior", name = "Rekening Junior Tabungan", type = "BANK", accountNo = "Junior-0182", balance = 5_000_000m, isShared = true, syncStatus = "MANAGED", app = "bluJunior", icon = "PiggyBank" },
-        };
-
-        var kevinNetWorth = kevinWallets.Sum(w => w.balance);
-        var istriNetWorth = istriWallets.Sum(w => w.balance);
-        var anakNetWorth = anakWallets.Sum(w => w.balance);
-        var totalFamilyNetWorth = kevinNetWorth + istriNetWorth + anakNetWorth;
-
-        // Family Internal Transfers (e.g. Suami -> Istri for belanja bulanan)
-        var internalTransfers = new[]
-        {
-            new
-            {
-                id = "fit-101",
-                fromMember = "Kevin Naserwan (Suami)",
-                toMember = "Istri Kevin",
-                sourceWallet = "blu BCA",
-                destinationWallet = "SeaBank Indonesia",
-                amount = 7_500_000m,
-                category = "Uang Belanja Bulanan Keluarga",
-                timestamp = DateTime.UtcNow.AddDays(-2).ToString("yyyy-MM-dd HH:mm:ss"),
-                status = "RECONCILED_NON_EXPENSE",
-                notes = "Otomatis dieliminasi dari pengeluaran eksternal (Internal Transfer)"
-            },
-            new
-            {
-                id = "fit-102",
-                fromMember = "Kevin Naserwan (Suami)",
-                toMember = "Tabungan Anak",
-                sourceWallet = "Superbank Indonesia",
-                destinationWallet = "Rekening Junior Tabungan",
-                amount = 1_000_000m,
-                category = "Alokasi Uang Saku & Tabungan Leo",
-                timestamp = DateTime.UtcNow.AddDays(-5).ToString("yyyy-MM-dd HH:mm:ss"),
-                status = "RECONCILED_NON_EXPENSE",
-                notes = "Transfer internal dompet keluarga aman tanpa duplikasi"
-            }
-        };
-
-        // Joint Budgets
-        var jointBudgets = new[]
-        {
-            new { name = "Belanja Bulanan & Dapur", allocated = 8_000_000m, spent = 4_250_000m, remaining = 3_750_000m, pic = "Istri Kevin" },
-            new { name = "Investasi Rutin Rumah Tangga", allocated = 15_000_000m, spent = 15_000_000m, remaining = 0m, pic = "Kevin Naserwan" },
-            new { name = "Kebutuhan & Kursus Anak", allocated = 3_000_000m, spent = 1_200_000m, remaining = 1_800_000m, pic = "Bersama" }
-        };
+        var kevin = Members.FirstOrDefault(m => m.Id == "mem-kevin");
+        var kevinNetWorth = kevin?.TotalBalance ?? 0m;
+        var totalFamilyNetWorth = Members.Sum(m => m.TotalBalance);
+        var connectedDevicesCount = Members.Count(m => m.DeviceStatus == "ONLINE");
 
         return Ok(new
         {
@@ -103,50 +123,88 @@ public class FamilyController : ControllerBase
                 head = "Kevin Naserwan",
                 activeMode = mode,
                 totalNetWorth = mode == "personal" ? kevinNetWorth : totalFamilyNetWorth,
-                membersCount = 3,
-                connectedDevicesCount = 2,
-                members = new object[]
+                membersCount = Members.Count,
+                connectedDevicesCount = connectedDevicesCount,
+                members = Members.Select(m => new
                 {
-                    new
-                    {
-                        id = "mem-kevin",
-                        name = "Kevin Naserwan",
-                        role = "Suami (Head of Family)",
-                        avatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin",
-                        device = "Xiaomi 13 (Android 14) - Active",
-                        deviceStatus = "ONLINE",
-                        wallets = kevinWallets,
-                        totalBalance = kevinNetWorth,
-                        isCurrentProfile = true
-                    },
-                    new
-                    {
-                        id = "mem-istri",
-                        name = "Istri Kevin",
-                        role = "Istri (Co-Admin)",
-                        avatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-                        device = "Samsung Galaxy S23 (Android 14) - Active",
-                        deviceStatus = "ONLINE",
-                        wallets = istriWallets,
-                        totalBalance = istriNetWorth,
-                        isCurrentProfile = false
-                    },
-                    new
-                    {
-                        id = "mem-anak",
-                        name = "Leo (Anak)",
-                        role = "Anak (Pendidikan & Saku)",
-                        avatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=Leo",
-                        device = "Managed Account",
-                        deviceStatus = "MANAGED",
-                        wallets = anakWallets,
-                        totalBalance = anakNetWorth,
-                        isCurrentProfile = false
-                    }
-                },
-                jointBudgets,
-                internalTransfers
+                    id = m.Id,
+                    name = m.Name,
+                    role = m.Role,
+                    avatar = m.Avatar,
+                    device = m.Device,
+                    deviceStatus = m.DeviceStatus,
+                    wallets = m.Wallets,
+                    totalBalance = m.TotalBalance,
+                    isCurrentProfile = m.IsCurrentProfile
+                }),
+                jointBudgets = Budgets,
+                internalTransfers = Transfers
             }
+        });
+    }
+
+    [HttpPost("member/add")]
+    public IActionResult AddMember([FromBody] AddMemberRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return BadRequest(new { success = false, message = "Nama anggota keluarga wajib diisi." });
+        }
+
+        var newMember = new MemberDto
+        {
+            Id = $"mem-{Guid.NewGuid().ToString()[..6]}",
+            Name = request.Name.Trim(),
+            Role = request.Role,
+            Avatar = $"https://api.dicebear.com/7.x/avataaars/svg?seed={Uri.EscapeDataString(request.Name)}",
+            Device = "Menunggu Pairing Companion APK",
+            DeviceStatus = "PENDING_PAIR",
+            IsCurrentProfile = false,
+            Wallets = new List<WalletDto>()
+        };
+
+        Members.Add(newMember);
+
+        return Ok(new
+        {
+            success = true,
+            message = $"Anggota '{newMember.Name}' ({newMember.Role}) berhasil ditambahkan ke Keluarga.",
+            member = newMember
+        });
+    }
+
+    [HttpPost("wallet/add")]
+    public IActionResult AddWallet([FromBody] AddWalletRequest request)
+    {
+        var member = Members.FirstOrDefault(m => m.Id == request.MemberId) ?? Members.First();
+        var icon = request.Type switch
+        {
+            "BANK" => "Landmark",
+            "EWALLET" => "ShoppingBag",
+            "INVEST" => "TrendingUp",
+            _ => "Wallet"
+        };
+
+        var wallet = new WalletDto
+        {
+            Id = $"w-{Guid.NewGuid().ToString()[..6]}",
+            Name = request.Name,
+            Type = request.Type,
+            AccountNo = request.AccountNo,
+            Balance = request.InitialBalance,
+            IsShared = request.IsShared,
+            SyncStatus = "CONNECTED",
+            App = request.Name,
+            Icon = icon
+        };
+
+        member.Wallets.Add(wallet);
+
+        return Ok(new
+        {
+            success = true,
+            message = $"Dompet '{wallet.Name}' berhasil ditambahkan ke akun {member.Name}.",
+            wallet
         });
     }
 
@@ -163,31 +221,52 @@ public class FamilyController : ControllerBase
             return BadRequest(new { success = false, message = "Kode undangan tidak valid atau telah kadaluarsa." });
         }
 
+        var memberName = !string.IsNullOrWhiteSpace(request.MemberName) ? request.MemberName : "Anggota Baru";
+        var memberRole = !string.IsNullOrWhiteSpace(request.MemberRole) ? request.MemberRole : "Istri";
+
+        var member = new MemberDto
+        {
+            Id = $"mem-{Guid.NewGuid().ToString()[..6]}",
+            Name = memberName,
+            Role = memberRole,
+            Avatar = $"https://api.dicebear.com/7.x/avataaars/svg?seed={Uri.EscapeDataString(memberName)}",
+            Device = request.DeviceId ?? "Android Phone - Companion Active",
+            DeviceStatus = "ONLINE",
+            IsCurrentProfile = false,
+            Wallets = new List<WalletDto>()
+        };
+
+        Members.Add(member);
+
         return Ok(new
         {
             success = true,
-            message = $"Berhasil bergabung ke grup 'Keluarga Kevin & Istri' sebagai {request.MemberRole ?? "Anggota"}.",
-            familyGroup = new
-            {
-                id = "fam-kevin-001",
-                name = "Keluarga Kevin & Istri",
-                role = request.MemberRole ?? "Anggota",
-                syncStatus = "LINKED"
-            }
+            message = $"Perangkat berhasil terhubung ke Family Group 'Keluarga Kevin & Istri' sebagai {member.Role}.",
+            member
         });
     }
 
     [HttpPost("wallet/toggle-share")]
     public IActionResult ToggleWalletShare([FromBody] ToggleWalletShareRequest request)
     {
+        foreach (var member in Members)
+        {
+            var w = member.Wallets.FirstOrDefault(x => x.Id == request.WalletId);
+            if (w != null)
+            {
+                w.IsShared = request.IsShared;
+                break;
+            }
+        }
+
         return Ok(new
         {
             success = true,
             walletId = request.WalletId,
             isShared = request.IsShared,
             message = request.IsShared 
-                ? "Dompet berhasil dibagikan ke ringkasan Mode Family." 
-                : "Dompet kini bersifat privat (Hanya terlihat di Mode Personal)."
+                ? "Dompet dibagikan ke ringkasan Mode Family." 
+                : "Dompet kini privat (Hanya terlihat di Mode Personal)."
         });
     }
 }

@@ -68,12 +68,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setActiveMode(parsed.activeMode);
         }
       } else {
-        // First load defaults to verified Kevin Naserwan profile
-        setUser(defaultUser);
-        localStorage.setItem('reconx_auth_user', JSON.stringify(defaultUser));
+        // Enforce Authentication Gate: Do not auto-login
+        setUser(null);
       }
     } catch {
-      setUser(defaultUser);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
