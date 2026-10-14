@@ -25,52 +25,7 @@ export const MobileSyncView: React.FC = () => {
   const [customText, setCustomText] = useState('Pembelian Saham AS NVDA senilai Rp 500.000 telah berhasil dieksekusi di market.');
   const [invoiceNumber, setInvoiceNumber] = useState('PLU-992182');
   
-  const [syncedHistory, setSyncedHistory] = useState<any[]>([
-    {
-      id: 'MOB-20261014-4264',
-      app: 'Pluang (Emas, Kripto, Saham AS)',
-      pkg: 'com.pluang.android',
-      amount: 500000,
-      merchant: 'Saham AS NVDA',
-      channel: 'HYBRID_NOTIF_AND_EMAIL',
-      ref: 'PLU-992182',
-      time: 'Baru saja',
-      isEnriched: true
-    },
-    {
-      id: 'EML-20261014-4088',
-      app: 'Bareksa Portal Investasi',
-      pkg: 'com.bareksa.android',
-      amount: 750000,
-      merchant: 'Reksa Dana Pendapatan Tetap',
-      channel: 'HYBRID_NOTIF_AND_EMAIL',
-      ref: 'BAR-338291',
-      time: '3 menit lalu',
-      isEnriched: true
-    },
-    {
-      id: 'MOB-20261014-8841',
-      app: 'blu by BCA Digital',
-      pkg: 'id.co.bcadigital.blu',
-      amount: 45000,
-      merchant: 'Kopi Kenangan',
-      channel: 'BLU_QRIS_OR_TRANSFER',
-      ref: 'EXT-APP-BLU_-8841',
-      time: '10 menit lalu',
-      isEnriched: false
-    },
-    {
-      id: 'MOB-20261014-9912',
-      app: 'ShopeePay',
-      pkg: 'com.shopee.id',
-      amount: 185000,
-      merchant: 'Toko Komputer Sukses',
-      channel: 'SHOPEEPAY_WALLET',
-      ref: 'EXT-APP-SHOP-9912',
-      time: '18 menit lalu',
-      isEnriched: false
-    }
-  ]);
+  const [syncedHistory, setSyncedHistory] = useState<any[]>([]);
 
   const targetApps = [
     { 
@@ -292,6 +247,43 @@ export const MobileSyncView: React.FC = () => {
             <span className="font-bold">Anti-Double Engine:</span>
             <span className="font-mono text-xs">CROSS-CHANNEL ACTIVE</span>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile Companion APK Download Banner */}
+      <div className="rounded-2xl border border-cyan-200 dark:border-cyan-800/60 bg-gradient-to-r from-cyan-50/80 via-blue-50/50 to-indigo-50/60 dark:from-cyan-950/40 dark:via-blue-950/30 dark:to-indigo-950/40 p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="p-3 rounded-xl bg-cyan-600 text-white shadow-md shadow-cyan-600/20 shrink-0">
+            <Smartphone className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span>Download ReconX Companion Android APK</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-600 text-white">v1.0.0</span>
+            </h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+              Pasang aplikasi di HP Android Mas Kevin untuk menangkap notifikasi transaksi otomatis (BCA, Superbank, SeaBank, Mandiri, Shopee, OVO, Bibit, Pluang).
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+          <a
+            href="https://github.com/KevinNaserwan/reconx-mobile/actions"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 sm:flex-initial text-center px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
+          >
+            GitHub Actions Builds
+          </a>
+          <a
+            href="https://github.com/KevinNaserwan/reconx-mobile/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 sm:flex-initial text-center px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white shadow-xs transition-colors"
+          >
+            Download APK (Releases)
+          </a>
         </div>
       </div>
 
