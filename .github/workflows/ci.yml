@@ -1,0 +1,49 @@
+name: ReconX CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  backend-test:
+    name: Backend Build & Unit Tests (.NET 8)
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET 8 SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore Backend Dependencies
+      run: dotnet restore backend/ReconX.sln
+
+    - name: Build Backend Solution
+      run: dotnet build backend/ReconX.sln --no-restore --configuration Release
+
+    - name: Run Unit Tests
+      run: dotnet test backend/ReconX.sln --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test_results.trx"
+
+  frontend-build:
+    name: Frontend Build & Lint (Next.js 14)
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install Frontend Dependencies
+      run: cd frontend && npm ci
+
+    - name: Run Lint & Production Build
+      run: cd frontend && npm run build
