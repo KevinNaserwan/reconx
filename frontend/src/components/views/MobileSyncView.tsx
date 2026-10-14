@@ -8,8 +8,6 @@ import {
   CheckCircle2, 
   ShieldCheck, 
   Zap, 
-  Lock, 
-  Copy, 
   Sparkles,
   Link2
 } from 'lucide-react';
@@ -17,7 +15,7 @@ import { API_BASE_URL } from '@/lib/api';
 import { useAuth } from '../auth/AuthContext';
 
 export const MobileSyncView: React.FC = () => {
-  const { user, setIsLoginModalOpen } = useAuth();
+  const { user } = useAuth();
   const [simulationType, setSimulationType] = useState<'notification' | 'email'>('notification');
   const [isInjecting, setIsInjecting] = useState(false);
   const [injectResult, setInjectResult] = useState<string | null>(null);

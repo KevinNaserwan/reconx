@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Menu, Zap, ShieldCheck, RefreshCw, PanelLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Menu, Zap, ShieldCheck, RefreshCw, PanelLeft, LogOut } from 'lucide-react';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useAuth } from '../auth/AuthContext';
 
@@ -22,7 +23,8 @@ export const Header: React.FC<HeaderProps> = ({
   onQuickReconcile,
   isRunning = false,
 }) => {
-  const { user, setIsLoginModalOpen, activeMode, switchMode } = useAuth();
+  const router = useRouter();
+  const { user, activeMode, switchMode, logout } = useAuth();
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between transition-colors">
       <div className="flex items-center space-x-3.5">
@@ -91,18 +93,32 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">ENFORCED</span>
         </div>
 
-        {/* User Account / Google SSO Trigger */}
-        <button
-          onClick={() => setIsLoginModalOpen(true)}
-          className="flex items-center space-x-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 px-2.5 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          title="Google Account / Enterprise SSO"
-        >
+        {/* User Account Info */}
+        <div className="flex items-center space-x-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 px-2.5 py-1.5">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-white font-bold text-[10px] ring-1 ring-emerald-500">
             {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'KN'}
           </div>
-          <span className="hidden xl:inline text-xs font-bold text-slate-700 dark:text-slate-300">
-            {user?.name || 'Kevin Naserwan'}
-          </span>
+          <div className="hidden sm:block text-left">
+            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-none">
+              {user?.name || 'Kevin Naserwan'}
+            </p>
+            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold leading-tight mt-0.5">
+              {user?.familyName || 'Keluarga Kevin & Istri'}
+            </p>
+          </div>
+        </div>
+
+        {/* Explicit Logout Button */}
+        <button
+          onClick={() => {
+            logout();
+            router.push('/login');
+          }}
+          className="flex items-center space-x-1.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 px-3 py-1.5 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 font-bold text-xs transition-colors shadow-sm"
+          title="Keluar dari Akun (Logout)"
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="hidden sm:inline">Keluar</span>
         </button>
 
         {/* Theme Toggle (Moved from sidebar) */}

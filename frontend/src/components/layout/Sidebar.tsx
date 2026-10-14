@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   BarChart3, 
   ArrowLeftRight, 
@@ -11,11 +12,10 @@ import {
   Radio, 
   History,
   Sliders, 
-  Building2,
-  PanelLeftClose,
   PanelLeftOpen,
   Smartphone,
   Users,
+  LogOut,
   X
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
@@ -39,7 +39,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsedDesktop,
   setIsCollapsedDesktop,
 }) => {
-  const { user, setIsLoginModalOpen } = useAuth();
+  const router = useRouter();
+  const { user, logout } = useAuth();
 
   const navSections = [
     {
@@ -276,30 +277,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
           isCollapsedDesktop ? 'p-2 flex justify-center' : 'p-3.5'
         }`}>
           {isCollapsedDesktop ? (
-            <div 
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-xs ring-2 ring-emerald-500/20 cursor-pointer hover:ring-emerald-500 transition-all"
-              title={`${user?.name || 'Kevin Naserwan'} — Click to Manage Account`}
-              onClick={() => setIsLoginModalOpen(true)}
-            >
-              {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'KN'}
-            </div>
-          ) : (
-            <div 
-              onClick={() => setIsLoginModalOpen(true)}
-              className="flex items-center space-x-3 rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors cursor-pointer group"
-              title="Click to Switch User / Google SSO"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-sm ring-2 ring-emerald-500/20 group-hover:ring-emerald-500 transition-all">
+            <div className="flex flex-col items-center space-y-2">
+              <div 
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-xs ring-2 ring-emerald-500/20 cursor-pointer hover:ring-emerald-500 transition-all"
+                title={`${user?.name || 'Kevin Naserwan'} — ${user?.role || 'User'}`}
+              >
                 {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'KN'}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate leading-tight group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                  {user?.name || 'Kevin Naserwan'}
-                </p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold truncate mt-0.5">
-                  {user?.role || 'Fintech Lead Architect'}
-                </p>
+              <button
+                onClick={() => {
+                  logout();
+                  router.push('/login');
+                }}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                title="Keluar (Logout)"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors">
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-sm ring-2 ring-emerald-500/20 shrink-0">
+                  {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'KN'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate leading-tight">
+                    {user?.name || 'Kevin Naserwan'}
+                  </p>
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold truncate mt-0.5">
+                    {user?.role || 'Fintech Lead Architect'}
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={() => {
+                  logout();
+                  router.push('/login');
+                }}
+                className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors shrink-0"
+                title="Keluar (Logout)"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </div>
           )}
         </div>

@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, ShieldCheck, Lock, CheckCircle2 } from 'lucide-react';
+import { X, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
 export const LoginModal: React.FC = () => {
-  const { isLoginModalOpen, setIsLoginModalOpen, loginWithGoogle, user } = useAuth();
+  const { isLoginModalOpen, setIsLoginModalOpen, loginWithGoogle } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isLoginModalOpen) return null;

@@ -14,7 +14,6 @@ import {
   EyeOff, 
   Sparkles,
   ChevronRight,
-  PlusCircle,
   Landmark,
   Wallet,
   ShoppingBag,
@@ -27,6 +26,7 @@ import {
   UserPlus
 } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
+import { useAuth } from '../auth/AuthContext';
 
 interface WalletItem {
   id: string;
@@ -91,6 +91,7 @@ export const FamilyModeView: React.FC<{ activeMode: 'personal' | 'family'; onSwi
   activeMode,
   onSwitchMode,
 }) => {
+  const { user } = useAuth();
   const [familyData, setFamilyData] = useState<FamilyData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -111,7 +112,14 @@ export const FamilyModeView: React.FC<{ activeMode: 'personal' | 'family'; onSwi
   const fetchFamilySummary = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`${API_BASE_URL.replace('/v1', '')}/v1/family/summary?mode=${activeMode}`);
+      const famIdQuery = user?.familyId ? `&familyId=${encodeURIComponent(user.familyId)}` : '';
+      const inviteCodeQuery = user?.familyInviteCode ? `&inviteCode=${encodeURIComponent(user.familyInviteCode)}` : '';
+      const res = await fetch(`${API_BASE_URL.replace('/v1', '')}/v1/family/summary?mode=${activeMode}${famIdQuery}${inviteCodeQuery}`, {
+        headers: {
+          'X-Family-Id': user?.familyId || '',
+          'X-User-Email': user?.email || '',
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setFamilyData(data.familyGroup);
@@ -128,7 +136,7 @@ export const FamilyModeView: React.FC<{ activeMode: 'personal' | 'family'; onSwi
 
   useEffect(() => {
     fetchFamilySummary();
-  }, [activeMode]);
+  }, [activeMode, user?.familyId]);
 
   const copyInviteCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -145,6 +153,7 @@ export const FamilyModeView: React.FC<{ activeMode: 'personal' | 'family'; onSwi
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          familyId: user?.familyId,
           name: newMemberName.trim(),
           role: newMemberRole,
         }),
@@ -170,10 +179,11 @@ export const FamilyModeView: React.FC<{ activeMode: 'personal' | 'family'; onSwi
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          memberId: newWalletMemberId || familyData?.members[0]?.id || 'mem-kevin',
+          familyId: user?.familyId,
+          memberId: newWalletMemberId,
           name: newWalletName.trim(),
           type: newWalletType,
-          accountNo: newWalletAccountNo.trim() || 'ACC-' + Math.floor(1000 + Math.random() * 9000),
+          accountNo: newWalletAccountNo.trim() || '-',
           initialBalance: parseFloat(newWalletBalance) || 0,
           isShared: true,
         }),
@@ -296,7 +306,7 @@ export const FamilyModeView: React.FC<{ activeMode: 'personal' | 'family'; onSwi
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-slate-200/80 dark:border-slate-800/80">
           <div className="bg-white/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/40 rounded-xl p-4 shadow-xs dark:shadow-none">
             <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              {activeMode === 'personal' ? 'Total Kekayaan Pribadi (Mas Kevin)' : 'Total Kekayaan Bersih Keluarga'}
+              {activeMode === 'personal' ? `Total Kekayaan Pribadi (${user?.name || 'Saya'})` : `Total Kekayaan Bersih (${familyData.name})`}
             </div>
             <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
               Rp {familyData.totalNetWorth.toLocaleString('id-ID')}
@@ -518,7 +528,7 @@ export const FamilyModeView: React.FC<{ activeMode: 'personal' | 'family'; onSwi
               Transfer Internal Antar-Anggota Keluarga (Auto-Deduplicated)
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Ketika Mas Kevin mentransfer uang ke Istri (misal belanja dapur / nafkah), ReconX mendeteksi kedua sisi dan mengeliminasi dari pengeluaran eksternal sehingga tidak dobel hitung di laporan.
+              Ketika antar-anggota mentransfer dana (misal belanja kebutuhan / nafkah), ReconX mendeteksi kedua mutasi dan mengeliminasi transaksi internal agar tidak dobel hitung di laporan.
             </p>
           </div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
@@ -643,7 +653,7 @@ export const FamilyModeView: React.FC<{ activeMode: 'personal' | 'family'; onSwi
                 <input
                   type="text"
                   required
-                  placeholder="Contoh: Istri Kevin, Anak Pertama"
+                  placeholder="Contoh: Pasangan, Anak Pertama, Orang Tua"
                   value={newMemberName}
                   onChange={(e) => setNewMemberName(e.target.value)}
                   className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"

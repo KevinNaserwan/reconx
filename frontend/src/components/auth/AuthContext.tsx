@@ -10,11 +10,21 @@ export interface UserProfile {
   picture: string;
   role: string;
   tenant: string;
-  familyId?: string;
-  familyName?: string;
-  familyInviteCode?: string;
+  familyId: string;
+  familyName: string;
+  familyInviteCode: string;
   activeMode: 'personal' | 'family';
   token?: string;
+}
+
+export interface RegisterPayload {
+  name: string;
+  email: string;
+  password?: string;
+  action: 'create_family' | 'join_family';
+  familyName?: string;
+  inviteCode?: string;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -22,31 +32,22 @@ interface AuthContextType {
   isLoading: boolean;
   activeMode: 'personal' | 'family';
   switchMode: (mode: 'personal' | 'family') => void;
-  loginWithGoogle: (customData?: Partial<UserProfile>) => Promise<void>;
+  loginWithGoogle: (customData?: Partial<UserProfile>) => Promise<boolean>;
+  loginWithEmail: (email: string, password?: string) => Promise<{ success: boolean; message?: string }>;
+  register: (payload: RegisterPayload) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   isLoginModalOpen: boolean;
   setIsLoginModalOpen: (open: boolean) => void;
 }
-
-export const defaultUser: UserProfile = {
-  id: 'usr-kevin-001',
-  name: 'Kevin Naserwan',
-  email: 'kevin.naserwan@gmail.com',
-  picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin',
-  role: 'Head of Household (Suami)',
-  tenant: 'Keluarga Kevin & Istri',
-  familyId: 'fam-kevin-001',
-  familyName: 'Keluarga Kevin & Istri',
-  familyInviteCode: 'FAM-KVN-8821',
-  activeMode: 'family',
-};
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   activeMode: 'family',
   switchMode: () => {},
-  loginWithGoogle: async () => {},
+  loginWithGoogle: async () => false,
+  loginWithEmail: async () => ({ success: false }),
+  register: async () => ({ success: false }),
   logout: () => {},
   isLoginModalOpen: false,
   setIsLoginModalOpen: () => {},
@@ -87,37 +88,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginWithGoogle = async (customData?: Partial<UserProfile>) => {
+  const loginWithGoogle = async (customData?: Partial<UserProfile>): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const profile: UserProfile = {
+      const email = customData?.email || 'kevin.naserwan@gmail.com';
+      const name = customData?.name || 'Kevin Naserwan';
+      const picture = customData?.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
+
+      let profile: UserProfile = {
         id: customData?.id || 'usr-kevin-001',
-        name: customData?.name || 'Kevin Naserwan',
-        email: customData?.email || 'kevin.naserwan@gmail.com',
-        picture: customData?.picture || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin',
-        role: 'Head of Household (Suami)',
-        tenant: 'Keluarga Kevin & Istri',
-        familyId: 'fam-kevin-001',
-        familyName: 'Keluarga Kevin & Istri',
-        familyInviteCode: 'FAM-KVN-8821',
+        name,
+        email,
+        picture,
+        role: customData?.role || 'Head of Household (Suami)',
+        tenant: customData?.familyName || 'Keluarga Kevin & Istri',
+        familyId: customData?.familyId || 'fam-kevin-001',
+        familyName: customData?.familyName || 'Keluarga Kevin & Istri',
+        familyInviteCode: customData?.familyInviteCode || 'FAM-KVN-8821',
         activeMode: activeMode,
       };
 
-      // Call backend Google Auth endpoint
       try {
         const res = await fetch(`${API_BASE_URL.replace('/v1', '')}/v1/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email: profile.email,
-            name: profile.name,
-            picture: profile.picture,
+            email,
+            name,
+            picture,
             idToken: 'mock_google_id_token_' + Date.now(),
           }),
         });
+
         if (res.ok) {
           const data = await res.json();
-          profile.token = data.token;
+          if (data.user) {
+            profile = {
+              ...profile,
+              id: data.user.id,
+              name: data.user.name,
+              email: data.user.email,
+              role: data.user.role,
+              familyId: data.user.familyId,
+              familyName: data.user.familyName,
+              familyInviteCode: data.user.familyInviteCode,
+              tenant: data.user.familyName,
+              token: data.token,
+            };
+          }
         }
       } catch (e) {
         console.warn('Backend auth sync skipped, using local session', e);
@@ -126,6 +144,93 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(profile);
       localStorage.setItem('reconx_auth_user', JSON.stringify(profile));
       setIsLoginModalOpen(false);
+      return true;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithEmail = async (email: string, password?: string): Promise<{ success: boolean; message?: string }> => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL.replace('/v1', '')}/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: password || 'reconx123' }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, message: data.message || 'Gagal login.' };
+      }
+
+      const profile: UserProfile = {
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        picture: data.user.picture,
+        role: data.user.role,
+        tenant: data.user.familyName,
+        familyId: data.user.familyId,
+        familyName: data.user.familyName,
+        familyInviteCode: data.user.familyInviteCode,
+        activeMode: 'family',
+        token: data.token,
+      };
+
+      setUser(profile);
+      localStorage.setItem('reconx_auth_user', JSON.stringify(profile));
+      setIsLoginModalOpen(false);
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, message: e.message || 'Gagal terhubung ke server auth.' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (payload: RegisterPayload): Promise<{ success: boolean; message?: string }> => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL.replace('/v1', '')}/v1/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: payload.name,
+          email: payload.email,
+          password: payload.password || 'reconx123',
+          action: payload.action,
+          familyName: payload.familyName,
+          inviteCode: payload.inviteCode,
+          role: payload.role || (payload.action === 'join_family' ? 'Anggota Keluarga' : 'Head of Household'),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, message: data.message || 'Gagal mendaftar akun baru.' };
+      }
+
+      const profile: UserProfile = {
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        picture: data.user.picture,
+        role: data.user.role,
+        tenant: data.user.familyName,
+        familyId: data.user.familyId,
+        familyName: data.user.familyName,
+        familyInviteCode: data.user.familyInviteCode,
+        activeMode: 'family',
+        token: data.token,
+      };
+
+      setUser(profile);
+      localStorage.setItem('reconx_auth_user', JSON.stringify(profile));
+      setIsLoginModalOpen(false);
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, message: e.message || 'Gagal terhubung ke server registrasi.' };
     } finally {
       setIsLoading(false);
     }
@@ -144,6 +249,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         activeMode,
         switchMode,
         loginWithGoogle,
+        loginWithEmail,
+        register,
         logout,
         isLoginModalOpen,
         setIsLoginModalOpen,
