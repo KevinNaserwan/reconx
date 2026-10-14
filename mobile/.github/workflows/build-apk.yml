@@ -81,7 +81,18 @@ jobs:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError"
         run: |
           flutter build apk --release --no-tree-shake-icons 2>&1 | tee build_output.log
-        continue-on-error: true
+
+      - name: Push Build Log to Branch on Failure
+        if: failure()
+        run: |
+          git config --global user.email "bot@reconx.io"
+          git config --global user.name "ReconX Builder"
+          git checkout --orphan build-log 2>/dev/null || git checkout -B build-log
+          git rm -rf . 2>/dev/null || true
+          cp build_output.log log.txt 2>/dev/null || echo "No log found" > log.txt
+          git add log.txt
+          git commit -m "debug: build log" || true
+          git push -f origin build-log || true
 
       - name: Verify Build & Inspect Logs
         run: |
@@ -91,14 +102,6 @@ jobs:
           fi
           if [ -z "$APK_FILE" ]; then
             echo "::error::Flutter APK not found!"
-            python3 -c "
-            with open('build_output.log', 'r', errors='ignore') as f:
-                lines = f.readlines()
-            for line in lines[-60:]:
-                l = line.strip()
-                if l:
-                    print(f'::error::{l}')
-            "
             exit 1
           fi
           echo "Found APK: $APK_FILE"
