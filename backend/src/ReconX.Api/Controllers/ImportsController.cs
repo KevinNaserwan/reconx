@@ -8,6 +8,12 @@ using ReconX.Domain.Exceptions;
 
 namespace ReconX.Api.Controllers;
 
+public class UploadCsvRequest
+{
+    public string ProviderId { get; set; } = string.Empty;
+    public IFormFile File { get; set; } = null!;
+}
+
 [ApiController]
 [Route("api/v1/imports")]
 public class ImportsController : ControllerBase
@@ -50,24 +56,23 @@ public class ImportsController : ControllerBase
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadProviderCsv(
-        [FromForm] string providerId,
-        [FromForm] IFormFile file,
+        [FromForm] UploadCsvRequest request,
         CancellationToken cancellationToken)
     {
-        var provider = await _context.Providers.FindAsync(new object[] { providerId }, cancellationToken);
+        var provider = await _context.Providers.FindAsync(new object[] { request.ProviderId }, cancellationToken);
         if (provider == null)
         {
-            throw new DomainException($"Provider '{providerId}' not found.");
+            throw new DomainException($"Provider '{request.ProviderId}' not found.");
         }
 
-        if (file == null || file.Length == 0)
+        if (request.File == null || request.File.Length == 0)
         {
             throw new DomainException("CSV file payload is empty.");
         }
 
         // Calculate SHA-256 for File Deduplication
         using var memoryStream = new MemoryStream();
-        await file.CopyToAsync(memoryStream, cancellationToken);
+        await request.File.CopyToAsync(memoryStream, cancellationToken);
         var fileBytes = memoryStream.ToArray();
         var fileHash = Convert.ToHexString(SHA256.HashData(fileBytes)).ToLowerInvariant();
 
@@ -88,7 +93,7 @@ public class ImportsController : ControllerBase
         var batch = new ImportBatch
         {
             ProviderId = provider.Id,
-            FileName = file.FileName,
+            FileName = request.File.FileName,
             FileSha256 = fileHash,
             TotalRecords = validRows.Count + parseErrors.Count,
             ProcessedRecords = validRows.Count,
@@ -121,7 +126,7 @@ public class ImportsController : ControllerBase
         return Ok(new
         {
             batchId = batch.Id,
-            fileName = file.FileName,
+            fileName = request.File.FileName,
             totalRows = batch.TotalRecords,
             processedRows = batch.ProcessedRecords,
             failedRows = batch.FailedRecords,

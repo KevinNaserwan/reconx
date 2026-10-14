@@ -32,11 +32,13 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Database Setup: Use PostgreSQL if ConnectionStrings:DefaultConnection is provided, else fallback to In-Memory
+// Database Setup: Use InMemory if configured or if PostgreSQL is unreachable
+var useInMemory = builder.Configuration.GetValue<bool>("UseInMemory", true);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    if (!string.IsNullOrWhiteSpace(connectionString) && !connectionString.Contains("Host=localhost;Database=reconx_dummy"))
+    if (!useInMemory && !string.IsNullOrWhiteSpace(connectionString))
     {
         options.UseNpgsql(connectionString);
     }
@@ -59,10 +61,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    if (context.Database.IsInMemory())
-    {
-        context.Database.EnsureCreated();
-    }
+    context.Database.EnsureCreated();
     await DbInitializer.SeedAsync(context);
 }
 
@@ -70,11 +69,13 @@ using (var scope = app.Services.CreateScope())
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseMiddleware<IdempotencyMiddleware>();
 
-if (app.Environment.IsDevelopment() || true)
+app.UseStaticFiles();
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ReconX API v1"));
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ReconX API v1");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseCors("AllowAll");
 app.UseAuthorization();
