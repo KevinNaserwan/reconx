@@ -46,7 +46,51 @@ public static class DbInitializer
             IsActive = true
         };
 
-        await context.Providers.AddRangeAsync(midtrans, xendit, bca);
+        var bluBca = new Provider
+        {
+            Id = "prov-blu-004",
+            Code = "BLU_BCA",
+            Name = "blu by BCA Digital (SNAP BI & Mutasi)",
+            FeeCalculationType = FeeCalculationType.Fixed,
+            FeeRate = 0m,
+            FixedFeeAmount = 0m,
+            IsActive = true
+        };
+
+        var superbank = new Provider
+        {
+            Id = "prov-superbank-005",
+            Code = "SUPERBANK",
+            Name = "Superbank Indonesia (BI-FAST / Open API)",
+            FeeCalculationType = FeeCalculationType.Fixed,
+            FeeRate = 0m,
+            FixedFeeAmount = 0m,
+            IsActive = true
+        };
+
+        var seabank = new Provider
+        {
+            Id = "prov-seabank-006",
+            Code = "SEABANK",
+            Name = "SeaBank Indonesia (Virtual Account & QRIS)",
+            FeeCalculationType = FeeCalculationType.Fixed,
+            FeeRate = 0m,
+            FixedFeeAmount = 1000.0000m,
+            IsActive = true
+        };
+
+        var shopeepay = new Provider
+        {
+            Id = "prov-shopeepay-007",
+            Code = "SHOPEEPAY",
+            Name = "ShopeePay Indonesia (Merchant Wallet & QRIS)",
+            FeeCalculationType = FeeCalculationType.Percentage,
+            FeeRate = 0.0070m, // 0.70% QRIS MDR
+            FixedFeeAmount = 0m,
+            IsActive = true
+        };
+
+        await context.Providers.AddRangeAsync(midtrans, xendit, bca, bluBca, superbank, seabank, shopeepay);
         await context.SaveChangesAsync();
 
         // Seed Realistic Synthetic Internal Transactions (10 sample transactions)
