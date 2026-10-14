@@ -14,8 +14,10 @@ import {
   Building2,
   PanelLeftClose,
   PanelLeftOpen,
+  Smartphone,
   X
 } from 'lucide-react';
+import { useAuth } from '../auth/AuthContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -36,6 +38,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsedDesktop,
   setIsCollapsedDesktop,
 }) => {
+  const { user, setIsLoginModalOpen } = useAuth();
+
   const navSections = [
     {
       group: 'OPERATIONAL CLEARING',
@@ -62,6 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       group: 'PLATFORM GOVERNANCE',
       items: [
         { id: 'connectors', label: 'Gateway Connectors', icon: Radio },
+        { id: 'mobile-sync', label: 'Mobile Sync Agent', icon: Smartphone },
         { id: 'audit-trail', label: 'Security Audit Logs', icon: History },
         { id: 'settings', label: 'Rules & Thresholds', icon: Sliders },
       ],
@@ -278,23 +283,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }`}>
           {isCollapsedDesktop ? (
             <div 
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-xs ring-2 ring-emerald-500/20 cursor-pointer"
-              title="Kevin Naserwan — Fintech Lead Architect"
-              onClick={() => setIsCollapsedDesktop(false)}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-xs ring-2 ring-emerald-500/20 cursor-pointer hover:ring-emerald-500 transition-all"
+              title={`${user?.name || 'Kevin Naserwan'} — Click to Manage Account`}
+              onClick={() => setIsLoginModalOpen(true)}
             >
-              KN
+              {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'KN'}
             </div>
           ) : (
-            <div className="flex items-center space-x-3 rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-sm ring-2 ring-emerald-500/20">
-                KN
+            <div 
+              onClick={() => setIsLoginModalOpen(true)}
+              className="flex items-center space-x-3 rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors cursor-pointer group"
+              title="Click to Switch User / Google SSO"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-sm ring-2 ring-emerald-500/20 group-hover:ring-emerald-500 transition-all">
+                {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'KN'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate leading-tight">
-                  Kevin Naserwan
+                <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate leading-tight group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  {user?.name || 'Kevin Naserwan'}
                 </p>
                 <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold truncate mt-0.5">
-                  Fintech Lead Architect
+                  {user?.role || 'Fintech Lead Architect'}
                 </p>
               </div>
             </div>

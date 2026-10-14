@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { ThemeProvider } from '@/components/ui/ThemeContext';
+import { AuthProvider } from '@/components/auth/AuthContext';
+import { LoginModal } from '@/components/auth/LoginModal';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { DashboardOverview } from '@/components/DashboardOverview';
@@ -11,6 +13,7 @@ import { FileIngestion } from '@/components/FileIngestion';
 import { InternalLedgerView } from '@/components/views/InternalLedgerView';
 import { ProviderSettlementView } from '@/components/views/ProviderSettlementView';
 import { ConnectorsView } from '@/components/views/ConnectorsView';
+import { MobileSyncView } from '@/components/views/MobileSyncView';
 import { AuditTrailView } from '@/components/views/AuditTrailView';
 import { SettingsView } from '@/components/views/SettingsView';
 import { 
@@ -165,6 +168,7 @@ export default function Home() {
       case 'internal-ledger': return 'Internal Ledgers';
       case 'provider-settlement': return 'Provider Statements';
       case 'connectors': return 'Gateway Connectors';
+      case 'mobile-sync': return 'Mobile Sync Agent';
       case 'audit-trail': return 'Security Audit Trail';
       case 'settings': return 'Rules & Settings';
       default: return 'Clearing Platform';
@@ -173,81 +177,90 @@ export default function Home() {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex transition-colors">
-        {/* Left SaaS Sidebar */}
-        <Sidebar
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          openExceptionsCount={metrics?.kpis.openExceptionsCount || 0}
-          isOpenMobile={isOpenMobile}
-          setIsOpenMobile={setIsOpenMobile}
-          isCollapsedDesktop={isCollapsedDesktop}
-          setIsCollapsedDesktop={setIsCollapsedDesktop}
-        />
-
-        {/* Main Content Viewport */}
-        <div className={`flex-1 ${isCollapsedDesktop ? 'lg:pl-20' : 'lg:pl-72'} flex flex-col min-w-0 transition-all duration-300`}>
-          <Header
-            onOpenMobileSidebar={() => setIsOpenMobile(true)}
-            onToggleDesktopSidebar={() => setIsCollapsedDesktop((prev) => !prev)}
+      <AuthProvider>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex transition-colors">
+          {/* Left SaaS Sidebar */}
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            openExceptionsCount={metrics?.kpis.openExceptionsCount || 0}
+            isOpenMobile={isOpenMobile}
+            setIsOpenMobile={setIsOpenMobile}
             isCollapsedDesktop={isCollapsedDesktop}
-            activeTabLabel={getTabLabel(activeTab)}
-            onQuickReconcile={handleQuickReconcile}
-            isRunning={isQuickReconciling}
+            setIsCollapsedDesktop={setIsCollapsedDesktop}
           />
 
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-            {activeTab === 'overview' && (
-              <DashboardOverview
-                metrics={metrics}
-                runs={runs}
-                onRefresh={loadData}
-                onSelectRun={handleInspectRun}
-              />
-            )}
+          {/* Main Content Viewport */}
+          <div className={`flex-1 ${isCollapsedDesktop ? 'lg:pl-20' : 'lg:pl-72'} flex flex-col min-w-0 transition-all duration-300`}>
+            <Header
+              onOpenMobileSidebar={() => setIsOpenMobile(true)}
+              onToggleDesktopSidebar={() => setIsCollapsedDesktop((prev) => !prev)}
+              isCollapsedDesktop={isCollapsedDesktop}
+              activeTabLabel={getTabLabel(activeTab)}
+              onQuickReconcile={handleQuickReconcile}
+              isRunning={isQuickReconciling}
+            />
 
-            {activeTab === 'workbench' && (
-              <ReconciliationWorkbench
-                runs={runs}
-                selectedRunId={selectedRunId}
-              />
-            )}
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+              {activeTab === 'overview' && (
+                <DashboardOverview
+                  metrics={metrics}
+                  runs={runs}
+                  onRefresh={loadData}
+                  onSelectRun={handleInspectRun}
+                />
+              )}
 
-            {activeTab === 'exceptions' && (
-              <ExceptionQueue
-                exceptions={exceptions}
-                onRefresh={loadData}
-              />
-            )}
+              {activeTab === 'workbench' && (
+                <ReconciliationWorkbench
+                  runs={runs}
+                  selectedRunId={selectedRunId}
+                />
+              )}
 
-            {activeTab === 'ingestion' && (
-              <FileIngestion
-                onUploadSuccess={loadData}
-              />
-            )}
+              {activeTab === 'exceptions' && (
+                <ExceptionQueue
+                  exceptions={exceptions}
+                  onRefresh={loadData}
+                />
+              )}
 
-            {activeTab === 'internal-ledger' && (
-              <InternalLedgerView />
-            )}
+              {activeTab === 'ingestion' && (
+                <FileIngestion
+                  onUploadSuccess={loadData}
+                />
+              )}
 
-            {activeTab === 'provider-settlement' && (
-              <ProviderSettlementView />
-            )}
+              {activeTab === 'internal-ledger' && (
+                <InternalLedgerView />
+              )}
 
-            {activeTab === 'connectors' && (
-              <ConnectorsView />
-            )}
+              {activeTab === 'provider-settlement' && (
+                <ProviderSettlementView />
+              )}
 
-            {activeTab === 'audit-trail' && (
-              <AuditTrailView />
-            )}
+              {activeTab === 'connectors' && (
+                <ConnectorsView />
+              )}
 
-            {activeTab === 'settings' && (
-              <SettingsView />
-            )}
-          </main>
+              {activeTab === 'mobile-sync' && (
+                <MobileSyncView />
+              )}
+
+              {activeTab === 'audit-trail' && (
+                <AuditTrailView />
+              )}
+
+              {activeTab === 'settings' && (
+                <SettingsView />
+              )}
+            </main>
+          </div>
+
+          {/* Global Google OAuth Login Modal */}
+          <LoginModal />
         </div>
-      </div>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
