@@ -18,13 +18,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   final List<Map<String, String>> monitoredApps = [
+    {'name': 'Pluang (Emas & Saham)', 'pkg': 'com.pluang.android', 'color': '0xFFFBBF24'},
+    {'name': 'Bibit (Investasi)', 'pkg': 'com.bibit.id', 'color': '0xFF14B8A6'},
+    {'name': 'Bareksa', 'pkg': 'com.bareksa.android', 'color': '0xFF10B981'},
+    {'name': 'Ajaib Sekuritas', 'pkg': 'com.ajaib.android', 'color': '0xFF3B82F6'},
+    {'name': 'Stockbit Saham', 'pkg': 'id.stockbit.android', 'color': '0xFF6366F1'},
     {'name': 'blu by BCA', 'pkg': 'id.co.bcadigital.blu', 'color': '0xFF06B6D4'},
     {'name': 'SeaBank', 'pkg': 'com.searpm.bank', 'color': '0xFFF97316'},
     {'name': 'Superbank', 'pkg': 'id.superbank.app', 'color': '0xFFA855F7'},
     {'name': 'ShopeePay', 'pkg': 'com.shopee.id', 'color': '0xFFF59E0B'},
     {'name': 'Tokopedia', 'pkg': 'com.tokopedia.tkpd', 'color': '0xFF10B981'},
-    {'name': 'OVO', 'pkg': 'ovo.id', 'color': '0xFF6366F1'},
-    {'name': 'Bibit (Investasi)', 'pkg': 'com.bibit.id', 'color': '0xFF14B8A6'},
+    {'name': 'OVO', 'pkg': 'ovo.id', 'color': '0xFF8B5CF6'},
   ];
 
   @override
@@ -107,12 +111,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         onSelected: (val) {
                           setSheetState(() {
                             selectedPkg = app['pkg']!;
-                            if (app['name']!.contains('blu')) {
+                            if (app['name']!.contains('Pluang')) {
+                              textController.text = 'Pembelian Saham AS NVDA senilai Rp 500.000 telah berhasil dieksekusi di market.';
+                            } else if (app['name']!.contains('Bibit')) {
+                              textController.text = 'Pembelian Reksa Dana Pasar Uang senilai Rp 1.000.000 telah diverifikasi KSEI.';
+                            } else if (app['name']!.contains('Bareksa')) {
+                              textController.text = 'Order Reksa Dana Pendapatan Tetap sebesar Rp 750.000 telah sukses.';
+                            } else if (app['name']!.contains('Ajaib')) {
+                              textController.text = 'Order Beli Saham BBCA Rp 2.500.000 telah MATCH di bursa.';
+                            } else if (app['name']!.contains('Stockbit')) {
+                              textController.text = 'Order buy 10 lot BMRI Rp 6.800.000 telah executed.';
+                            } else if (app['name']!.contains('blu')) {
                               textController.text = 'Pembayaran QRIS sebesar Rp 45.000 ke Kopi Kenangan telah berhasil.';
                             } else if (app['name']!.contains('Shopee')) {
                               textController.text = 'Pembayaran sebesar Rp 135.000 ke Toko Komputer Sukses telah selesai.';
-                            } else if (app['name']!.contains('Bibit')) {
-                              textController.text = 'Pembelian Reksa Dana Pasar Uang senilai Rp 1.000.000 telah diverifikasi.';
                             } else if (app['name']!.contains('SeaBank')) {
                               textController.text = 'Transfer masuk Rp 500.000 dari BCA Digital berhasil.';
                             }

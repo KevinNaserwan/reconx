@@ -68,6 +68,7 @@ public class MobileSyncController : ControllerBase
         // 1. Identify Target Provider
         var providerId = "prov-blu-004"; // Default
         var providerCode = "BLU_BCA";
+        var providerName = "blu by BCA Digital";
         var channel = "MOBILE_AUTO_SYNC";
 
         var pkg = (payload.AppPackage ?? "").ToLowerInvariant();
@@ -77,56 +78,106 @@ public class MobileSyncController : ControllerBase
         {
             providerId = "prov-blu-004";
             providerCode = "BLU_BCA";
+            providerName = "blu by BCA Digital";
             channel = "BLU_QRIS_OR_TRANSFER";
+        }
+        else if (pkg.Contains("pluang") || appName.Contains("pluang") || fullText.ToLower().Contains("pluang"))
+        {
+            providerId = "prov-pluang-008";
+            providerCode = "PLUANG";
+            providerName = "Pluang (Emas, Kripto, Saham AS)";
+            channel = "INVESTMENT_PLUANG";
+        }
+        else if (pkg.Contains("bibit") || appName.Contains("bibit") || fullText.ToLower().Contains("bibit"))
+        {
+            providerId = "prov-bibit-009";
+            providerCode = "BIBIT";
+            providerName = "Bibit Reksadana & SBN";
+            channel = "INVESTMENT_BIBIT";
+        }
+        else if (pkg.Contains("bareksa") || appName.Contains("bareksa") || fullText.ToLower().Contains("bareksa"))
+        {
+            providerId = "prov-bareksa-010";
+            providerCode = "BAREKSA";
+            providerName = "Bareksa Portal Investasi";
+            channel = "INVESTMENT_BAREKSA";
+        }
+        else if (pkg.Contains("ajaib") || appName.Contains("ajaib") || fullText.ToLower().Contains("ajaib"))
+        {
+            providerId = "prov-ajaib-011";
+            providerCode = "AJAIB";
+            providerName = "Ajaib Sekuritas & Kripto";
+            channel = "INVESTMENT_AJAIB";
+        }
+        else if (pkg.Contains("stockbit") || appName.Contains("stockbit") || fullText.ToLower().Contains("stockbit"))
+        {
+            providerId = "prov-stockbit-012";
+            providerCode = "STOCKBIT";
+            providerName = "Stockbit Investasi Saham";
+            channel = "INVESTMENT_STOCKBIT";
         }
         else if (pkg.Contains("searpm") || pkg.Contains("seabank") || appName.Contains("seabank"))
         {
             providerId = "prov-seabank-006";
             providerCode = "SEABANK";
+            providerName = "SeaBank Indonesia";
             channel = "SEABANK_QRIS";
         }
         else if (pkg.Contains("superbank") || appName.Contains("superbank"))
         {
             providerId = "prov-superbank-005";
             providerCode = "SUPERBANK";
+            providerName = "Superbank Indonesia";
             channel = "SUPERBANK_BIFAST";
         }
         else if (pkg.Contains("shopee") || appName.Contains("shopeepay"))
         {
             providerId = "prov-shopeepay-007";
             providerCode = "SHOPEEPAY";
+            providerName = "ShopeePay Indonesia";
             channel = "SHOPEEPAY_WALLET";
         }
         else if (pkg.Contains("tokopedia") || appName.Contains("tokopedia"))
         {
             providerId = "prov-midtrans-001";
             providerCode = "MIDTRANS";
+            providerName = "Tokopedia Checkout";
             channel = "TOKOPEDIA_CHECKOUT";
         }
         else if (pkg.Contains("ovo") || appName.Contains("ovo"))
         {
             providerId = "prov-midtrans-001";
             providerCode = "MIDTRANS";
+            providerName = "OVO Payment";
             channel = "OVO_PAYMENT";
         }
-        else if (appName.Contains("bibit") || appName.Contains("ajaib") || appName.Contains("stockbit") || fullText.ToLower().Contains("reksa dana") || fullText.ToLower().Contains("saham"))
+        else if (fullText.ToLower().Contains("reksa dana") || fullText.ToLower().Contains("saham"))
         {
             providerId = "prov-bca-003";
             providerCode = "BCA_VA";
+            providerName = "Bank Central Asia - Virtual Account";
             channel = "INVESTMENT_SETTLEMENT";
         }
 
-        // Verify provider exists in DB
+        // 2. Ensure Provider exists in Database dynamically
         var provider = await _context.Providers.FirstOrDefaultAsync(p => p.Id == providerId, cancellationToken);
         if (provider == null)
         {
-            // Fallback to first available provider
-            provider = await _context.Providers.FirstAsync(cancellationToken);
-            providerId = provider.Id;
-            providerCode = provider.Code;
+            provider = new Provider
+            {
+                Id = providerId,
+                Code = providerCode,
+                Name = providerName,
+                FeeCalculationType = ReconX.Domain.Enums.FeeCalculationType.Fixed,
+                FeeRate = 0m,
+                FixedFeeAmount = 0m,
+                IsActive = true
+            };
+            _context.Providers.Add(provider);
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        // 2. Parse Amount
+        // 3. Parse Amount
         decimal amount = payload.ExplicitAmount ?? 0;
         if (amount <= 0)
         {
@@ -143,10 +194,10 @@ public class MobileSyncController : ControllerBase
 
         if (amount <= 0)
         {
-            amount = 50000; // Reasonable default fallback for notifications without nominal
+            amount = 50000;
         }
 
-        // 3. Extract Merchant / Recipient
+        // 4. Extract Merchant / Recipient
         var merchant = payload.ExplicitMerchant ?? "";
         if (string.IsNullOrWhiteSpace(merchant))
         {
@@ -157,12 +208,54 @@ public class MobileSyncController : ControllerBase
             }
             else
             {
-                merchant = payload.AppName ?? "Merchant Partner";
+                merchant = payload.AppName ?? providerName;
             }
         }
 
-        // 4. Create Internal Ledger Transaction
         var timestamp = DateTime.UtcNow;
+
+        // 5. CRITICAL: Cross-Channel Anti-Deduplication Engine (±20 minutes window)
+        var windowStart = timestamp.AddMinutes(-20);
+        var windowEnd = timestamp.AddMinutes(20);
+
+        var existingDuplicate = await _context.InternalTransactions
+            .FirstOrDefaultAsync(t => 
+                t.ProviderId == provider.Id && 
+                t.Amount == amount && 
+                t.TransactionTime >= windowStart && 
+                t.TransactionTime <= windowEnd, 
+                cancellationToken);
+
+        if (existingDuplicate != null)
+        {
+            // ENRICH EXISTING RECORD WITHOUT DOUBLE-COUNTING!
+            if (!existingDuplicate.Channel.Contains("NOTIF"))
+            {
+                existingDuplicate.Channel = "HYBRID_NOTIF_AND_EMAIL";
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return Ok(new
+            {
+                success = true,
+                isDuplicate = true,
+                action = "DEDUPLICATED_AND_ENRICHED",
+                transactionId = existingDuplicate.Id,
+                transactionRef = existingDuplicate.TransactionRef,
+                externalRef = existingDuplicate.ExternalRef,
+                providerId = provider.Id,
+                providerCode = provider.Code,
+                providerName = provider.Name,
+                channel = existingDuplicate.Channel,
+                parsedAmount = existingDuplicate.Amount,
+                merchant,
+                syncedAt = DateTime.UtcNow,
+                message = $"Deduplikasi Cerdas: Transaksi {providerCode} senilai Rp {amount:N0} sudah terdata dari bukti lain (Email/App). Data digabungkan dan nominal TIDAK diduplikasi!"
+            });
+        }
+
+        // 6. Create Internal Ledger Transaction if brand new
         var randSuffix = Random.Shared.Next(1000, 9999);
         var trxRef = $"MOB-{timestamp:yyyyMMddHHmmss}-{randSuffix}";
         var extRef = $"EXT-APP-{providerCode.Substring(0, Math.Min(4, providerCode.Length))}-{randSuffix}";
