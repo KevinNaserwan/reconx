@@ -108,6 +108,7 @@ export default function Home() {
   const [runs, setRuns] = useState<ReconciliationRunItem[]>([]);
   const [exceptions, setExceptions] = useState<ExceptionCaseItem[]>([]);
   const [isOpenMobile, setIsOpenMobile] = useState(false);
+  const [isCollapsedDesktop, setIsCollapsedDesktop] = useState(false);
   const [isQuickReconciling, setIsQuickReconciling] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -180,12 +181,16 @@ export default function Home() {
           openExceptionsCount={metrics?.kpis.openExceptionsCount || 0}
           isOpenMobile={isOpenMobile}
           setIsOpenMobile={setIsOpenMobile}
+          isCollapsedDesktop={isCollapsedDesktop}
+          setIsCollapsedDesktop={setIsCollapsedDesktop}
         />
 
         {/* Main Content Viewport */}
-        <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
+        <div className={`flex-1 ${isCollapsedDesktop ? 'lg:pl-0' : 'lg:pl-72'} flex flex-col min-w-0 transition-all duration-300`}>
           <Header
             onOpenMobileSidebar={() => setIsOpenMobile(true)}
+            onToggleDesktopSidebar={() => setIsCollapsedDesktop((prev) => !prev)}
+            isCollapsedDesktop={isCollapsedDesktop}
             activeTabLabel={getTabLabel(activeTab)}
             onQuickReconcile={handleQuickReconcile}
             isRunning={isQuickReconciling}
