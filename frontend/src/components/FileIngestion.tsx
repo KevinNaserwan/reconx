@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { UploadCloud, CheckCircle2, Download, Check } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
@@ -81,20 +83,24 @@ MID-SETTLE-88005-ORPHAN,EXT-MID-9999-GHOST,320000.0000,4800.0000,315200.0000,IDR
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
-        <h2 className="text-base font-semibold text-white">Provider Statement Ingestion</h2>
-        <p className="text-xs text-slate-400 mt-0.5">
-          Upload settlement statements directly from Payment Gateways / Core Banking systems.
+      <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
+        <h2 className="text-base font-bold text-slate-900 dark:text-white">
+          Provider Settlement Statement Ingestion
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Upload settlement statements directly from Payment Gateways or Core Banking files with automatic SHA-256 deduplication.
         </p>
+      </div>
 
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 shadow-card space-y-4">
         {/* Upload Form */}
-        <form onSubmit={handleUpload} className="mt-5 space-y-4">
+        <form onSubmit={handleUpload} className="space-y-4">
           <div>
-            <label className="text-xs text-slate-400 block mb-1.5 font-medium">Select Target Provider</label>
+            <label className="text-xs text-slate-600 dark:text-slate-400 block mb-1.5 font-medium">Select Target Provider Gateway</label>
             <select
               value={providerId}
               onChange={(e) => setProviderId(e.target.value)}
-              className="w-full sm:w-72 h-9 rounded-md border border-slate-700 bg-slate-950 px-3 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none"
+              className="w-full sm:w-80 h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 text-xs text-slate-800 dark:text-slate-200 focus:border-emerald-500 focus:outline-none"
             >
               <option value="prov-midtrans-001">Midtrans Payment Gateway (MIDTRANS)</option>
               <option value="prov-xendit-002">Xendit XenPlatform (XENDIT)</option>
@@ -102,13 +108,13 @@ MID-SETTLE-88005-ORPHAN,EXT-MID-9999-GHOST,320000.0000,4800.0000,315200.0000,IDR
             </select>
           </div>
 
-          <div className="rounded-xl border-2 border-dashed border-slate-800 hover:border-slate-700 bg-slate-950/40 p-8 text-center transition-colors">
-            <UploadCloud className="mx-auto h-10 w-10 text-slate-500 mb-2" />
-            <div className="text-xs text-slate-300 font-medium">
+          <div className="rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500/50 bg-slate-50/50 dark:bg-slate-950/40 p-8 text-center transition-all">
+            <UploadCloud className="mx-auto h-10 w-10 text-emerald-500 mb-2" />
+            <div className="text-xs text-slate-800 dark:text-slate-200 font-semibold">
               {file ? file.name : 'Drag & drop bank statement CSV, or browse from computer'}
             </div>
             <p className="text-[11px] text-slate-500 mt-1">
-              Supports standard settlement formats (provider_trx_id, external_ref, gross_amount, fee_amount, currency)
+              Supports standard settlement schemas (provider_trx_id, external_ref, gross_amount, fee_amount, currency)
             </p>
 
             <input
@@ -120,17 +126,17 @@ MID-SETTLE-88005-ORPHAN,EXT-MID-9999-GHOST,320000.0000,4800.0000,315200.0000,IDR
             />
             <label
               htmlFor="csvFileInput"
-              className="mt-4 inline-block cursor-pointer rounded-md bg-slate-800 px-4 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700"
+              className="mt-4 inline-block cursor-pointer rounded-lg bg-slate-900 dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 dark:hover:bg-slate-700 transition-colors shadow-sm"
             >
-              Select CSV File
+              Choose CSV File
             </label>
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
             <button
               type="button"
               onClick={handleDownloadSample}
-              className="flex items-center space-x-1.5 text-xs text-emerald-400 hover:text-emerald-300"
+              className="flex items-center space-x-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
             >
               {copiedSample ? <Check className="h-3.5 w-3.5" /> : <Download className="h-3.5 w-3.5" />}
               <span>Download Synthetic Sample CSV</span>
@@ -139,7 +145,7 @@ MID-SETTLE-88005-ORPHAN,EXT-MID-9999-GHOST,320000.0000,4800.0000,315200.0000,IDR
             <button
               type="submit"
               disabled={uploading || !file}
-              className="rounded-md bg-emerald-600 px-5 py-2 text-xs font-semibold text-white shadow hover:bg-emerald-500 transition-colors disabled:opacity-50"
+              className="rounded-lg bg-emerald-600 px-5 py-2 text-xs font-semibold text-white shadow hover:bg-emerald-500 transition-colors disabled:opacity-50"
             >
               {uploading ? 'Parsing & Ingesting...' : 'Upload & Process Batch'}
             </button>
@@ -148,17 +154,17 @@ MID-SETTLE-88005-ORPHAN,EXT-MID-9999-GHOST,320000.0000,4800.0000,315200.0000,IDR
 
         {/* Upload Success Feedback */}
         {uploadResult && (
-          <div className="mt-5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
-            <div className="flex items-center space-x-2 text-emerald-400 font-medium text-xs">
+          <div className="mt-4 rounded-xl border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-950/30 p-4">
+            <div className="flex items-center space-x-2 text-emerald-700 dark:text-emerald-400 font-semibold text-xs">
               <CheckCircle2 className="h-4 w-4" />
-              <span>Import Batch Processed Successfully</span>
+              <span>Import Batch Ingested Successfully</span>
             </div>
-            <div className="mt-2 text-xs text-slate-300 space-y-1 font-mono">
+            <div className="mt-2 text-xs text-slate-700 dark:text-slate-300 space-y-1 font-mono">
               <div>Batch ID: {uploadResult.batchId}</div>
-              <div>File Name: {uploadResult.fileName}</div>
-              <div>Processed: {uploadResult.processedRows} valid transaction rows</div>
+              <div>File: {uploadResult.fileName}</div>
+              <div>Valid Processed: {uploadResult.processedRows} rows</div>
               {uploadResult.failedRows > 0 && (
-                <div className="text-amber-400">Errors flagged: {uploadResult.failedRows} rows</div>
+                <div className="text-amber-600 dark:text-amber-400">Failed / Quarantined: {uploadResult.failedRows} rows</div>
               )}
             </div>
           </div>
