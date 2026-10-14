@@ -23,10 +23,10 @@ export default function LoginPage() {
 
   // If already logged in, push to main dashboard
   useEffect(() => {
-    if (!isLoading && user) {
+    if (user) {
       router.replace('/');
     }
-  }, [user, isLoading, router]);
+  }, [user, router]);
 
   const handleGoogleLogin = async () => {
     setErrorMsg(null);
@@ -98,13 +98,6 @@ export default function LoginPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white flex flex-col justify-center items-center p-4 relative overflow-hidden">

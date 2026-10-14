@@ -130,10 +130,10 @@ function DashboardApp() {
 
   // Auth Guard: Redirect immediately to /login if not authenticated
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!user) {
       router.replace('/login');
     }
-  }, [user, isLoading, router]);
+  }, [user, router]);
 
   if (isLoading || !user) {
     return (
