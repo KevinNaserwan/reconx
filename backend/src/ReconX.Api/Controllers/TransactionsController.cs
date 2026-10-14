@@ -105,6 +105,21 @@ public class TransactionsController : ControllerBase
         _context.InternalTransactions.Add(trx);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return CreatedAtAction(nameof(GetInternalTransactions), new { id = trx.Id }, trx);
+        var responseDto = new InternalTransactionResponseDto(
+            trx.Id,
+            trx.TransactionRef,
+            trx.ExternalRef,
+            trx.ProviderId,
+            provider.Name,
+            trx.Amount,
+            trx.FeeAmount,
+            trx.Currency,
+            trx.TransactionTime,
+            trx.Channel,
+            trx.Status,
+            trx.CreatedAt
+        );
+
+        return Ok(responseDto);
     }
 }

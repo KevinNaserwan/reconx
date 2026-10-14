@@ -186,7 +186,7 @@ export default function Home() {
         />
 
         {/* Main Content Viewport */}
-        <div className={`flex-1 ${isCollapsedDesktop ? 'lg:pl-0' : 'lg:pl-72'} flex flex-col min-w-0 transition-all duration-300`}>
+        <div className={`flex-1 ${isCollapsedDesktop ? 'lg:pl-20' : 'lg:pl-72'} flex flex-col min-w-0 transition-all duration-300`}>
           <Header
             onOpenMobileSidebar={() => setIsOpenMobile(true)}
             onToggleDesktopSidebar={() => setIsCollapsedDesktop((prev) => !prev)}

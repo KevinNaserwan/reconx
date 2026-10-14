@@ -27,6 +27,22 @@
     --sidebar-active: #1e293b;
   }
 
+  html {
+    font-size: 16px;
+  }
+
+  @media (min-width: 640px) {
+    html {
+      font-size: 18px; /* Comfortable 112.5% scale on tablets */
+    }
+  }
+
+  @media (min-width: 1024px) {
+    html {
+      font-size: 19px; /* Generous 120% fintech enterprise scale on desktop */
+    }
+  }
+
   body {
     background-color: var(--background);
     color: var(--foreground);

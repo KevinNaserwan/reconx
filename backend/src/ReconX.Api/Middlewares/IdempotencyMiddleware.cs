@@ -55,28 +55,38 @@ public class IdempotencyMiddleware
 
         // Capture response
         var originalBodyStream = context.Response.Body;
-        using var responseBody = new MemoryStream();
-        context.Response.Body = responseBody;
-
-        await _next(context);
-
-        responseBody.Seek(0, SeekOrigin.Begin);
-        var responseText = await new StreamReader(responseBody).ReadToEndAsync();
-        responseBody.Seek(0, SeekOrigin.Begin);
-
-        if (context.Response.StatusCode is >= 200 and < 300)
+        try
         {
-            await idempotencyService.SaveRecordAsync(
-                key, 
-                context.Request.Path, 
-                requestHash, 
-                context.Response.StatusCode, 
-                responseText, 
-                TimeSpan.FromHours(24), 
-                context.RequestAborted);
-        }
+            using var responseBody = new MemoryStream();
+            context.Response.Body = responseBody;
 
-        await responseBody.CopyToAsync(originalBodyStream);
+            await _next(context);
+
+            responseBody.Seek(0, SeekOrigin.Begin);
+            using (var reader = new StreamReader(responseBody, Encoding.UTF8, leaveOpen: true))
+            {
+                var responseText = await reader.ReadToEndAsync();
+                responseBody.Seek(0, SeekOrigin.Begin);
+
+                if (context.Response.StatusCode is >= 200 and < 300)
+                {
+                    await idempotencyService.SaveRecordAsync(
+                        key, 
+                        context.Request.Path, 
+                        requestHash, 
+                        context.Response.StatusCode, 
+                        responseText, 
+                        TimeSpan.FromHours(24), 
+                        context.RequestAborted);
+                }
+            }
+
+            await responseBody.CopyToAsync(originalBodyStream);
+        }
+        finally
+        {
+            context.Response.Body = originalBodyStream;
+        }
     }
 
     private static string ComputeSha256(string raw)

@@ -8,7 +8,11 @@ using ReconX.Infrastructure.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Controllers & Swagger
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -66,6 +70,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 // HTTP Pipeline
+app.UseCors("AllowAll");
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseMiddleware<IdempotencyMiddleware>();
 
@@ -77,7 +82,6 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
