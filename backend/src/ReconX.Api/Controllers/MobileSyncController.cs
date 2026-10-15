@@ -28,6 +28,8 @@ public class MobileSyncController : ControllerBase
         public decimal? ExplicitAmount { get; set; }
         public string? ExplicitMerchant { get; set; }
         public string? Type { get; set; } // INCOME or EXPENSE
+        public string? Member { get; set; }
+        public string? Category { get; set; }
     }
 
     [HttpGet("status")]
@@ -300,7 +302,8 @@ public class MobileSyncController : ControllerBase
         // 7. Create Internal Ledger Transaction
         var randSuffix = Random.Shared.Next(1000, 9999);
         var trxRef = $"MOB-{timestamp:yyyyMMddHHmmss}-{randSuffix}";
-        var extRef = $"EXT-APP-{providerCode.Substring(0, Math.Min(4, providerCode.Length))}-{randSuffix}";
+        var memberTag = !string.IsNullOrWhiteSpace(payload.Member) ? $"[{payload.Member}] " : "";
+        var extRef = $"{memberTag}EXT-APP-{providerCode.Substring(0, Math.Min(4, providerCode.Length))}-{randSuffix}";
 
         var trx = new InternalTransaction
         {

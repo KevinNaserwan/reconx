@@ -128,14 +128,13 @@ public class TransactionsController : ControllerBase
 
     [HttpPost("reset")]
     [HttpDelete("all")]
-    public async Task<IActionResult> ResetAllTransactions(CancellationToken cancellationToken = default)
+    public Task<IActionResult> ResetAllTransactions(CancellationToken cancellationToken = default)
     {
-        _context.InternalTransactions.RemoveRange(_context.InternalTransactions);
-        await _context.SaveChangesAsync(cancellationToken);
-        return Ok(new
+        // Zero Data Loss Guard: Menolak penghapusan mutasi demi integritas data keuangan
+        return Task.FromResult<IActionResult>(BadRequest(new
         {
-            success = true,
-            message = "Seluruh riwayat mutasi internal ledger berhasil di-reset ke status bersih (0 transaksi)."
-        });
+            success = false,
+            message = "Fitur reset data mutasi telah dinonaktifkan secara permanen untuk menjamin integritas riwayat keuangan."
+        }));
     }
 }
