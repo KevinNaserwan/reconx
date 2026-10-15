@@ -223,19 +223,34 @@ public class MobileSyncController : ControllerBase
 
         // 4. Determine Transaction Type (Uang Masuk / INCOME vs Uang Keluar / EXPENSE)
         var lowerText = fullText.ToLowerInvariant();
-        var isIncome = !string.IsNullOrEmpty(payload.Type)
-            ? (payload.Type.Equals("INCOME", StringComparison.OrdinalIgnoreCase) || payload.Type.Equals("CREDIT", StringComparison.OrdinalIgnoreCase))
-            : (lowerText.Contains("transfer masuk") ||
-               lowerText.Contains("dana masuk") ||
-               lowerText.Contains("uang masuk") ||
-               lowerText.Contains("terima uang") ||
-               lowerText.Contains("menerima") ||
-               lowerText.Contains("top up berhasil") ||
-               lowerText.Contains("topup berhasil") ||
-               lowerText.Contains("setoran") ||
-               lowerText.Contains("kredit") ||
-               lowerText.Contains("cashback") ||
-               lowerText.Contains("dikredit"));
+        var isQrisPayment = lowerText.Contains("qris") && !lowerText.Contains("terima qris") && !lowerText.Contains("qris masuk") && !lowerText.Contains("qris diterima");
+
+        bool isIncome;
+        if (isQrisPayment || lowerText.Contains("pembayaran qris") || lowerText.Contains("bayar qris") || lowerText.Contains("pembayaran berhasil") || lowerText.Contains("kartu kredit"))
+        {
+            isIncome = false;
+        }
+        else if (!string.IsNullOrEmpty(payload.Type))
+        {
+            isIncome = payload.Type.Equals("INCOME", StringComparison.OrdinalIgnoreCase) || payload.Type.Equals("CREDIT", StringComparison.OrdinalIgnoreCase);
+        }
+        else
+        {
+            isIncome = lowerText.Contains("transfer masuk") ||
+                       lowerText.Contains("dana masuk") ||
+                       lowerText.Contains("uang masuk") ||
+                       lowerText.Contains("terima uang") ||
+                       lowerText.Contains("menerima transfer") ||
+                       lowerText.Contains("transfer dari") ||
+                       lowerText.Contains("diterima dari") ||
+                       lowerText.Contains("top up berhasil") ||
+                       lowerText.Contains("topup berhasil") ||
+                       lowerText.Contains("setoran tunai") ||
+                       (lowerText.Contains("kredit") && !lowerText.Contains("kartu kredit")) ||
+                       lowerText.Contains("cashback") ||
+                       lowerText.Contains("refund") ||
+                       lowerText.Contains("dikredit");
+        }
 
         var trxType = isIncome ? "INCOME" : "EXPENSE";
 
@@ -344,5 +359,17 @@ public class MobileSyncController : ControllerBase
             },
             message = $"Transaksi {trxType} dari HP berhasil dicatat di Internal Ledger ReconX! (Nominal: Rp {amount:N0})"
         });
+    }
+
+    [HttpDelete("transaction/{id}")]
+    public async Task<IActionResult> DeleteTransaction(string id, CancellationToken cancellationToken)
+    {
+        var trx = await _context.InternalTransactions.FirstOrDefaultAsync(t => t.Id == id || t.TransactionRef == id, cancellationToken);
+        if (trx != null)
+        {
+            _context.InternalTransactions.Remove(trx);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        return Ok(new { success = true, message = "Transaction deleted successfully." });
     }
 }
