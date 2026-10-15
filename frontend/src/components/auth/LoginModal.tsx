@@ -15,8 +15,8 @@ export const LoginModal: React.FC = () => {
     try {
       await loginWithGoogle({
         name: 'Kevin Naserwan',
-        email: 'kevin.naserwan@reconx.io',
-        role: 'Fintech Lead Architect',
+        email: 'kevin.naserwan@gmail.com',
+        role: 'Kevin (Partner)',
       });
     } finally {
       setIsSubmitting(false);
@@ -106,7 +106,7 @@ export const LoginModal: React.FC = () => {
                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                kevin.naserwan@reconx.io
+                kevin.naserwan@gmail.com
               </p>
             </div>
             <span className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm">

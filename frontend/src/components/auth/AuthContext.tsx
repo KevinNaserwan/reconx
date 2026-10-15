@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { API_BASE_URL } from '@/lib/api';
+import { API_BASE_URL, getApiBaseUrl } from '@/lib/api';
 
 export interface UserProfile {
   id: string;
@@ -115,7 +115,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       try {
-        const res = await fetch(`${API_BASE_URL.replace('/v1', '')}/v1/auth/google`, {
+        const authBase = getApiBaseUrl().replace('/v1', '');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const res = await fetch(`${authBase}/v1/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -124,7 +128,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             picture,
             idToken: 'mock_google_id_token_' + Date.now(),
           }),
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
 
         if (res.ok) {
           const data = await res.json();
@@ -149,7 +155,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setUser(profile);
-      localStorage.setItem('reconx_auth_user', JSON.stringify(profile));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('reconx_auth_user', JSON.stringify(profile));
+      }
       setIsLoginModalOpen(false);
       return true;
     } finally {
@@ -160,11 +168,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithEmail = async (email: string, password?: string): Promise<{ success: boolean; message?: string }> => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL.replace('/v1', '')}/v1/auth/login`, {
+      const authBase = getApiBaseUrl().replace('/v1', '');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+      const res = await fetch(`${authBase}/v1/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: password || 'reconx123' }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       const data = await res.json();
       if (!res.ok) {
@@ -186,7 +200,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       setUser(profile);
-      localStorage.setItem('reconx_auth_user', JSON.stringify(profile));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('reconx_auth_user', JSON.stringify(profile));
+      }
       setIsLoginModalOpen(false);
       return { success: true };
     } catch (e: any) {
@@ -199,7 +215,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (payload: RegisterPayload): Promise<{ success: boolean; message?: string }> => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL.replace('/v1', '')}/v1/auth/register`, {
+      const authBase = getApiBaseUrl().replace('/v1', '');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+      const res = await fetch(`${authBase}/v1/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -211,7 +231,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           inviteCode: payload.inviteCode,
           role: payload.role || (payload.action === 'join_family' ? 'Anggota Keluarga' : 'Head of Household'),
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       const data = await res.json();
       if (!res.ok) {
@@ -233,7 +255,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       setUser(profile);
-      localStorage.setItem('reconx_auth_user', JSON.stringify(profile));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('reconx_auth_user', JSON.stringify(profile));
+      }
       setIsLoginModalOpen(false);
       return { success: true };
     } catch (e: any) {

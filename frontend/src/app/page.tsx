@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ThemeProvider } from '@/components/ui/ThemeContext';
-import { AuthProvider, useAuth } from '@/components/auth/AuthContext';
+import { useAuth } from '@/components/auth/AuthContext';
 import { LoginModal } from '@/components/auth/LoginModal';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
@@ -241,11 +240,5 @@ function DashboardApp() {
 }
 
 export default function Home() {
-  return (
-    <ThemeProvider>
-      <AuthProvider>
-        <DashboardApp />
-      </AuthProvider>
-    </ThemeProvider>
-  );
+  return <DashboardApp />;
 }
