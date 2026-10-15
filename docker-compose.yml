@@ -19,5 +19,16 @@ services:
       timeout: 5s
       retries: 5
 
+  reconx-ocr:
+    build:
+      context: ./ocr-service
+      dockerfile: Dockerfile
+    container_name: reconx-ocr
+    restart: always
+    ports:
+      - "5055:5055"
+    environment:
+      - PORT=5055
+
 volumes:
   reconx_pgdata:

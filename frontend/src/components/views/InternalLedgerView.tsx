@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { DataTable, ColumnDef } from '../ui/DataTable';
 import { API_BASE_URL } from '@/lib/api';
-import { CreditCard, QrCode, Landmark, ArrowDownLeft, Eye, TrendingDown, TrendingUp, Wallet, Layers, PlusCircle, Users, X, CheckCircle2 } from 'lucide-react';
+import { CreditCard, QrCode, Landmark, ArrowDownLeft, Eye, TrendingDown, TrendingUp, Wallet, Layers, PlusCircle, Users, X, CheckCircle2, ScanLine, UploadCloud, Sparkles } from 'lucide-react';
 import { DetailDrawer } from '../ui/DetailDrawer';
 import { BrandBadge } from '../ui/BrandBadge';
 
@@ -38,6 +38,24 @@ export const InternalLedgerView: React.FC = () => {
   const [manualWallet, setManualWallet] = useState<string>('Tunai (Cash)');
   const [manualMerchant, setManualMerchant] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  // PaddleOCR Scan State
+  const [isOcrModalOpen, setIsOcrModalOpen] = useState<boolean>(false);
+  const [ocrFile, setOcrFile] = useState<File | null>(null);
+  const [ocrPreviewUrl, setOcrPreviewUrl] = useState<string | null>(null);
+  const [isOcrScanning, setIsOcrScanning] = useState<boolean>(false);
+  const [ocrResult, setOcrResult] = useState<{
+    merchant: string;
+    amount: number;
+    date: string;
+    type: string;
+    paymentMethod: string;
+    category: string;
+    confidenceScore: number;
+    rawLines: string[];
+  } | null>(null);
+  const [ocrMember, setOcrMember] = useState<string>('Kevin');
+  const [ocrError, setOcrError] = useState<string | null>(null);
 
   const fetchData = () => {
     setIsLoading(true);
@@ -288,6 +306,72 @@ export const InternalLedgerView: React.FC = () => {
     }
   };
 
+  const handleOcrFileSelect = (file: File) => {
+    setOcrFile(file);
+    setOcrPreviewUrl(URL.createObjectURL(file));
+    setOcrResult(null);
+    setOcrError(null);
+  };
+
+  const handleRunPaddleOcr = async () => {
+    if (!ocrFile) return;
+    setIsOcrScanning(true);
+    setOcrError(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', ocrFile);
+      const res = await fetch(`${API_BASE_URL}/ocr/scan-receipt`, {
+        method: 'POST',
+        body: formData,
+      });
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        setOcrResult(resData);
+      } else {
+        setOcrError(resData.message || 'Gagal memproses gambar melalui PaddleOCR Engine.');
+      }
+    } catch (err: any) {
+      setOcrError('Koneksi ke backend OCR terputus: ' + err.message);
+    } finally {
+      setIsOcrScanning(false);
+    }
+  };
+
+  const handleSaveOcrTransaction = async () => {
+    if (!ocrResult || !ocrResult.amount) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/mobile/sync-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appPackage: 'com.reconx.paddleocr.web',
+          appName: ocrResult.paymentMethod || 'PaddleOCR Scan',
+          title: `Scan Nota (${ocrMember})`,
+          content: `${ocrResult.type === 'INCOME' ? 'Penerimaan' : 'Pengeluaran'} PaddleOCR ${ocrResult.category}: ${ocrResult.merchant} senilai Rp ${ocrResult.amount}`,
+          postTime: Date.now(),
+          userEmail: 'knaserwan@reconx.io',
+          explicitAmount: ocrResult.amount,
+          explicitMerchant: ocrResult.merchant,
+          type: ocrResult.type || 'EXPENSE',
+          member: ocrMember,
+          category: ocrResult.category,
+        }),
+      });
+      if (res.ok) {
+        setIsOcrModalOpen(false);
+        setOcrFile(null);
+        setOcrPreviewUrl(null);
+        setOcrResult(null);
+        fetchData();
+      }
+    } catch (err) {
+      console.error('Error saving OCR transaction:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const filteredData = data.filter((item) => {
     if (selectedMember !== 'ALL') {
       const member = getMemberFromItem(item);
@@ -314,16 +398,31 @@ export const InternalLedgerView: React.FC = () => {
         <div>
           <h2 className="text-base font-bold text-slate-900 dark:text-white">Buku Kas & Mutasi Finansial</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Pencatatan real-time seluruh mutasi Uang Masuk dan Uang Keluar dari HP Android, Scan Nota, dan Input Manual.
+            Pencatatan real-time seluruh mutasi Uang Masuk dan Uang Keluar dari HP Android, Scan Nota (PaddleOCR), dan Input Manual.
           </p>
         </div>
-        <button
-          onClick={() => setIsManualModalOpen(true)}
-          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all shrink-0 cursor-pointer"
-        >
-          <PlusCircle className="h-4 w-4" />
-          <span>+ Catat Mutasi Manual</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setIsOcrModalOpen(true);
+              setOcrResult(null);
+              setOcrError(null);
+              setOcrFile(null);
+              setOcrPreviewUrl(null);
+            }}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-all shrink-0 cursor-pointer"
+          >
+            <ScanLine className="h-4 w-4" />
+            <span>📸 Scan Nota (PaddleOCR)</span>
+          </button>
+          <button
+            onClick={() => setIsManualModalOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all shrink-0 cursor-pointer"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>+ Catat Mutasi Manual</span>
+          </button>
+        </div>
       </div>
 
       {/* Family Member Filter Bar */}
@@ -706,6 +805,213 @@ export const InternalLedgerView: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Scan Nota & Bukti Transfer (PaddleOCR PP-OCRv4 Engine) */}
+      {isOcrModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                  <ScanLine className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">Scan Nota & Bukti Transfer</h3>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                      PaddleOCR PP-OCRv4
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Ekstraksi otomatis struk fisik, SPBU & screenshot M-Banking</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsOcrModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Upload Drag & Drop Area */}
+            {!ocrResult && (
+              <div className="space-y-4 text-xs">
+                <div
+                  onClick={() => document.getElementById('paddle-ocr-file-input')?.click()}
+                  className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+                    ocrFile
+                      ? 'border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/20'
+                      : 'border-slate-300 dark:border-slate-700 hover:border-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                  }`}
+                >
+                  <input
+                    id="paddle-ocr-file-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleOcrFileSelect(e.target.files[0]);
+                      }
+                    }}
+                  />
+                  {ocrPreviewUrl ? (
+                    <div className="space-y-2">
+                      <img
+                        src={ocrPreviewUrl}
+                        alt="Preview Nota"
+                        className="max-h-48 mx-auto rounded-xl shadow-xs object-contain"
+                      />
+                      <p className="font-bold text-indigo-600 dark:text-indigo-400 text-xs">
+                        {ocrFile?.name} ({(ocrFile!.size / 1024).toFixed(1)} KB)
+                      </p>
+                      <p className="text-[11px] text-slate-400">Klik untuk mengganti gambar</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="p-3 mx-auto w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                        <UploadCloud className="h-6 w-6" />
+                      </div>
+                      <p className="font-bold text-slate-700 dark:text-slate-300 text-xs">
+                        Pilih atau Drag & Drop Gambar Nota / Screenshot
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        Mendukung struk belanja, nota warung, SPBU, serta bukti transfer blu, BCA, Mandiri, BRI, dll.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {ocrError && (
+                  <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-xs">
+                    {ocrError}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setIsOcrModalOpen(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!ocrFile || isOcrScanning}
+                    onClick={handleRunPaddleOcr}
+                    className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    {isOcrScanning ? (
+                      <>
+                        <Sparkles className="h-4 w-4 animate-spin" />
+                        Memproses PaddleOCR...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Pindai dengan PaddleOCR
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* OCR Extracted Result Review */}
+            {ocrResult && (
+              <div className="space-y-4 text-xs">
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-500">Hasil Deteksi PaddleOCR:</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                      {(ocrResult.confidenceScore * 100).toFixed(0)}% Akurat
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500">Nominal Terdeteksi</label>
+                      <div className="mt-1 font-mono text-base font-extrabold text-emerald-600 dark:text-emerald-400">
+                        {formatCurrency(ocrResult.amount)}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500">Merchant / Penerima</label>
+                      <div className="mt-1 font-bold text-slate-900 dark:text-white truncate">
+                        {ocrResult.merchant}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500">Metode / Bank</label>
+                      <div className="mt-0.5 text-slate-700 dark:text-slate-300 font-semibold">
+                        {ocrResult.paymentMethod}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500">Kategori</label>
+                      <div className="mt-0.5 text-slate-700 dark:text-slate-300 font-semibold">
+                        {ocrResult.category}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Anggota Keluarga Pengguna */}
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Catat Untuk Anggota Keluarga:
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {['Kevin', 'Istri', 'Anak'].map((mem) => (
+                        <button
+                          key={mem}
+                          type="button"
+                          onClick={() => setOcrMember(mem)}
+                          className={`py-1.5 px-2 rounded-lg font-bold text-xs border transition-all cursor-pointer ${
+                            ocrMember === mem
+                              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300'
+                              : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50'
+                          }`}
+                        >
+                          {mem}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setOcrResult(null)}
+                    className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    ← Pindai Ulang
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={handleSaveOcrTransaction}
+                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    {isSubmitting ? (
+                      'Menyimpan...'
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-4 w-4" />
+                        Simpan ke Buku Kas
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

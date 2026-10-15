@@ -58,6 +58,7 @@ builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbConte
 builder.Services.AddScoped<IReconciliationEngine, ReconciliationEngine>();
 builder.Services.AddScoped<ICsvStreamParser, CsvStreamParser>();
 builder.Services.AddScoped<IIdempotencyService, IdempotencyService>();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

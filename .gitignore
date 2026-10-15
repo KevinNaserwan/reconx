@@ -20,3 +20,10 @@ yarn-error.log*
 # Environment
 .env*.local
 .env
+
+# Python & OCR Service
+**/.venv/
+**/venv/
+**/__pycache__/
+*.pyc
+.pytest_cache/
