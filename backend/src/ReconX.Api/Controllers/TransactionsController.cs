@@ -122,4 +122,17 @@ public class TransactionsController : ControllerBase
 
         return Ok(responseDto);
     }
+
+    [HttpPost("reset")]
+    [HttpDelete("all")]
+    public async Task<IActionResult> ResetAllTransactions(CancellationToken cancellationToken = default)
+    {
+        _context.InternalTransactions.RemoveRange(_context.InternalTransactions);
+        await _context.SaveChangesAsync(cancellationToken);
+        return Ok(new
+        {
+            success = true,
+            message = "Seluruh riwayat mutasi internal ledger berhasil di-reset ke status bersih (0 transaksi)."
+        });
+    }
 }
