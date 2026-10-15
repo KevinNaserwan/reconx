@@ -27,6 +27,7 @@ public class MobileSyncController : ControllerBase
         public string? UserEmail { get; set; }
         public decimal? ExplicitAmount { get; set; }
         public string? ExplicitMerchant { get; set; }
+        public string? Type { get; set; } // INCOME or EXPENSE
     }
 
     [HttpGet("status")]
@@ -181,27 +182,66 @@ public class MobileSyncController : ControllerBase
         decimal amount = payload.ExplicitAmount ?? 0;
         if (amount <= 0)
         {
-            var match = Regex.Match(fullText, @"(?:Rp|IDR)\s*([0-9\.\,]+)", RegexOptions.IgnoreCase);
-            if (match.Success)
+            // Intelligent regex parsing: Match Rp / IDR prefix
+            var rpMatch = Regex.Match(fullText, @"(?:Rp|IDR)\s*[:.]?\s*([0-9\.\,\s]+)", RegexOptions.IgnoreCase);
+            if (rpMatch.Success)
             {
-                var cleanNumber = match.Groups[1].Value.Replace(".", "").Replace(",", ".");
-                if (decimal.TryParse(cleanNumber, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+                var clean = rpMatch.Groups[1].Value.Trim();
+                if (clean.EndsWith(",00") || clean.EndsWith(".00"))
+                {
+                    clean = clean.Substring(0, clean.Length - 3);
+                }
+                clean = Regex.Replace(clean, @"[^\d]", "");
+                if (decimal.TryParse(clean, out var parsed) && parsed > 0)
                 {
                     amount = parsed;
                 }
             }
+
+            // Fallback: Indonesian thousands dot format (e.g. 10.500 or 150.000)
+            if (amount <= 0)
+            {
+                var dotMatch = Regex.Match(fullText, @"(?:^|[^\d])([0-9]{1,3}(?:[.,][0-9]{3})+)(?:[^\d]|$)", RegexOptions.IgnoreCase);
+                if (dotMatch.Success)
+                {
+                    var clean = Regex.Replace(dotMatch.Groups[1].Value, @"[^\d]", "");
+                    if (decimal.TryParse(clean, out var parsed) && parsed > 0)
+                    {
+                        amount = parsed;
+                    }
+                }
+            }
         }
 
+        // If amount could not be determined, return informative response without inventing fake numbers
         if (amount <= 0)
         {
-            amount = 50000;
+            return BadRequest(new { success = false, message = "Nominal transaksi tidak terdeteksi dari notifikasi." });
         }
 
-        // 4. Extract Merchant / Recipient
+        // 4. Determine Transaction Type (Uang Masuk / INCOME vs Uang Keluar / EXPENSE)
+        var lowerText = fullText.ToLowerInvariant();
+        var isIncome = !string.IsNullOrEmpty(payload.Type)
+            ? (payload.Type.Equals("INCOME", StringComparison.OrdinalIgnoreCase) || payload.Type.Equals("CREDIT", StringComparison.OrdinalIgnoreCase))
+            : (lowerText.Contains("transfer masuk") ||
+               lowerText.Contains("dana masuk") ||
+               lowerText.Contains("uang masuk") ||
+               lowerText.Contains("terima uang") ||
+               lowerText.Contains("menerima") ||
+               lowerText.Contains("top up berhasil") ||
+               lowerText.Contains("topup berhasil") ||
+               lowerText.Contains("setoran") ||
+               lowerText.Contains("kredit") ||
+               lowerText.Contains("cashback") ||
+               lowerText.Contains("dikredit"));
+
+        var trxType = isIncome ? "INCOME" : "EXPENSE";
+
+        // 5. Extract Merchant / Recipient
         var merchant = payload.ExplicitMerchant ?? "";
         if (string.IsNullOrWhiteSpace(merchant))
         {
-            var merchantMatch = Regex.Match(fullText, @"(?:ke|di|merchant|pembayaran)\s+([A-Za-z0-9\s\.\-_]{3,25})", RegexOptions.IgnoreCase);
+            var merchantMatch = Regex.Match(fullText, @"(?:ke|di|merchant|pembayaran|dari)\s+([A-Za-z0-9\s\.\-_]{3,28})", RegexOptions.IgnoreCase);
             if (merchantMatch.Success)
             {
                 merchant = merchantMatch.Groups[1].Value.Trim();
@@ -214,21 +254,22 @@ public class MobileSyncController : ControllerBase
 
         var timestamp = DateTime.UtcNow;
 
-        // 5. CRITICAL: Cross-Channel Anti-Deduplication Engine (±20 minutes window)
-        var windowStart = timestamp.AddMinutes(-20);
-        var windowEnd = timestamp.AddMinutes(20);
+        // 6. Precise Rapid-Duplicate Prevention Window (45s window to catch double OS broadcasts, without blocking legitimate repeated purchases)
+        var windowStart = timestamp.AddSeconds(-45);
+        var windowEnd = timestamp.AddSeconds(45);
 
         var existingDuplicate = await _context.InternalTransactions
             .FirstOrDefaultAsync(t => 
                 t.ProviderId == provider.Id && 
                 t.Amount == amount && 
+                t.Type == trxType &&
                 t.TransactionTime >= windowStart && 
                 t.TransactionTime <= windowEnd, 
                 cancellationToken);
 
         if (existingDuplicate != null)
         {
-            // ENRICH EXISTING RECORD WITHOUT DOUBLE-COUNTING!
+            // ENRICH EXISTING RECORD WITHOUT DOUBLE-COUNTING
             if (!existingDuplicate.Channel.Contains("NOTIF"))
             {
                 existingDuplicate.Channel = "HYBRID_NOTIF_AND_EMAIL";
@@ -248,14 +289,15 @@ public class MobileSyncController : ControllerBase
                 providerCode = provider.Code,
                 providerName = provider.Name,
                 channel = existingDuplicate.Channel,
+                type = existingDuplicate.Type,
                 parsedAmount = existingDuplicate.Amount,
                 merchant,
                 syncedAt = DateTime.UtcNow,
-                message = $"Deduplikasi Cerdas: Transaksi {providerCode} senilai Rp {amount:N0} sudah terdata dari bukti lain (Email/App). Data digabungkan dan nominal TIDAK diduplikasi!"
+                message = $"Deduplikasi Cerdas: Transaksi {providerCode} {trxType} senilai Rp {amount:N0} sudah terdata dari bukti lain. Nominal TIDAK diduplikasi!"
             });
         }
 
-        // 6. Create Internal Ledger Transaction if brand new
+        // 7. Create Internal Ledger Transaction
         var randSuffix = Random.Shared.Next(1000, 9999);
         var trxRef = $"MOB-{timestamp:yyyyMMddHHmmss}-{randSuffix}";
         var extRef = $"EXT-APP-{providerCode.Substring(0, Math.Min(4, providerCode.Length))}-{randSuffix}";
@@ -269,6 +311,7 @@ public class MobileSyncController : ControllerBase
             Currency = "IDR",
             TransactionTime = timestamp,
             Channel = channel,
+            Type = trxType,
             FeeAmount = Math.Round(amount * provider.FeeRate + provider.FixedFeeAmount, 2),
             Status = "SUCCESS"
         };
@@ -286,6 +329,7 @@ public class MobileSyncController : ControllerBase
             providerCode = provider.Code,
             providerName = provider.Name,
             channel = trx.Channel,
+            type = trx.Type,
             parsedAmount = trx.Amount,
             merchant,
             syncedAt = trx.CreatedAt,
@@ -295,7 +339,7 @@ public class MobileSyncController : ControllerBase
                 content = payload.Content,
                 app = payload.AppName ?? payload.AppPackage
             },
-            message = $"Transaksi dari HP berhasil terdata di Internal Ledger ReconX! (Nominal: Rp {amount:N0})"
+            message = $"Transaksi {trxType} dari HP berhasil dicatat di Internal Ledger ReconX! (Nominal: Rp {amount:N0})"
         });
     }
 }

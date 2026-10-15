@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { DataTable, ColumnDef } from '../ui/DataTable';
 import { API_BASE_URL } from '@/lib/api';
-import { CreditCard, QrCode, Landmark, ArrowDownLeft, Eye } from 'lucide-react';
+import { CreditCard, QrCode, Landmark, ArrowDownLeft, Eye, TrendingDown, TrendingUp, Wallet, Layers } from 'lucide-react';
 import { DetailDrawer } from '../ui/DetailDrawer';
 import { BrandBadge } from '../ui/BrandBadge';
 
@@ -19,120 +19,27 @@ interface InternalTransactionItem {
   transactionTime: string;
   channel: string;
   status: string;
+  type?: string;
   createdAt: string;
 }
 
 export const InternalLedgerView: React.FC = () => {
   const [data, setData] = useState<InternalTransactionItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<InternalTransactionItem | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    setIsLoading(true);
     fetch(`${API_BASE_URL}/transactions?pageSize=100`)
       .then((res) => res.json())
-      .then((res) => setData(res.items || []))
+      .then((res) => {
+        setData(res.items || []);
+        setIsLoading(false);
+      })
       .catch((err) => {
-        console.error(err);
-        // Fallback demo data if offline
-        setData([
-          {
-            id: 'int-001',
-            transactionRef: 'TRX-ORD-1001',
-            externalRef: 'EXT-MID-9001',
-            providerId: 'prov-midtrans-001',
-            providerName: 'Midtrans Payment Gateway',
-            amount: 250000,
-            feeAmount: 3750,
-            currency: 'IDR',
-            transactionTime: '2026-10-14T10:05:00Z',
-            channel: 'QRIS',
-            status: 'SUCCESS',
-            createdAt: '2026-10-14T10:05:00Z',
-          },
-          {
-            id: 'int-002',
-            transactionRef: 'TRX-ORD-1002',
-            externalRef: 'EXT-MID-9002',
-            providerId: 'prov-midtrans-001',
-            providerName: 'Midtrans Payment Gateway',
-            amount: 1500000,
-            feeAmount: 22500,
-            currency: 'IDR',
-            transactionTime: '2026-10-14T10:15:00Z',
-            channel: 'CC',
-            status: 'SUCCESS',
-            createdAt: '2026-10-14T10:15:00Z',
-          },
-          {
-            id: 'int-003',
-            transactionRef: 'TRX-ORD-1003',
-            externalRef: 'EXT-MID-9003',
-            providerId: 'prov-midtrans-001',
-            providerName: 'Midtrans Payment Gateway',
-            amount: 500000,
-            feeAmount: 7500,
-            currency: 'IDR',
-            transactionTime: '2026-10-14T10:25:00Z',
-            channel: 'VA',
-            status: 'SUCCESS',
-            createdAt: '2026-10-14T10:25:00Z',
-          },
-          {
-            id: 'int-004',
-            transactionRef: 'TRX-BLU-1004',
-            externalRef: 'EXT-BLU-1001',
-            providerId: 'prov-blu-004',
-            providerName: 'blu by BCA Digital',
-            amount: 150000,
-            feeAmount: 0,
-            currency: 'IDR',
-            transactionTime: '2026-10-14T11:00:00Z',
-            channel: 'SNAP_BI_DEBIT',
-            status: 'SUCCESS',
-            createdAt: '2026-10-14T11:00:00Z',
-          },
-          {
-            id: 'int-005',
-            transactionRef: 'TRX-SPB-1005',
-            externalRef: 'EXT-SPB-2001',
-            providerId: 'prov-superbank-005',
-            providerName: 'Superbank Indonesia',
-            amount: 350000,
-            feeAmount: 0,
-            currency: 'IDR',
-            transactionTime: '2026-10-14T11:15:00Z',
-            channel: 'BI_FAST',
-            status: 'SUCCESS',
-            createdAt: '2026-10-14T11:15:00Z',
-          },
-          {
-            id: 'int-006',
-            transactionRef: 'TRX-SEA-1006',
-            externalRef: 'EXT-SEA-3001',
-            providerId: 'prov-seabank-006',
-            providerName: 'SeaBank Indonesia',
-            amount: 75000,
-            feeAmount: 1000,
-            currency: 'IDR',
-            transactionTime: '2026-10-14T11:10:00Z',
-            channel: 'QRIS',
-            status: 'SUCCESS',
-            createdAt: '2026-10-14T11:10:00Z',
-          },
-          {
-            id: 'int-007',
-            transactionRef: 'TRX-SPAY-1007',
-            externalRef: 'EXT-SPAY-4001',
-            providerId: 'prov-shopeepay-007',
-            providerName: 'ShopeePay Indonesia',
-            amount: 100000,
-            feeAmount: 700,
-            currency: 'IDR',
-            transactionTime: '2026-10-14T11:05:00Z',
-            channel: 'SHOPEEPAY_WALLET',
-            status: 'SUCCESS',
-            createdAt: '2026-10-14T11:05:00Z',
-          },
-        ]);
+        console.error('Error fetching internal transactions:', err);
+        setData([]);
+        setIsLoading(false);
       });
   }, []);
 
@@ -142,6 +49,31 @@ export const InternalLedgerView: React.FC = () => {
       currency: 'IDR',
       minimumFractionDigits: 0,
     }).format(val);
+
+  const isIncomeItem = (item: InternalTransactionItem) => {
+    if (item.type?.toUpperCase() === 'INCOME') return true;
+    if (item.type?.toUpperCase() === 'EXPENSE') return false;
+    const text = `${item.transactionRef} ${item.externalRef} ${item.channel} ${item.providerName}`.toLowerCase();
+    return (
+      text.includes('masuk') ||
+      text.includes('menerima') ||
+      text.includes('topup') ||
+      text.includes('top up') ||
+      text.includes('kredit') ||
+      text.includes('cashback') ||
+      text.includes('refund')
+    );
+  };
+
+  const totalExpense = data
+    .filter((d) => !isIncomeItem(d))
+    .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
+  const totalIncome = data
+    .filter((d) => isIncomeItem(d))
+    .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
+  const netCashflow = totalIncome - totalExpense;
 
   const getChannelIcon = (channel: string) => {
     switch (channel?.toUpperCase()) {
@@ -174,6 +106,26 @@ export const InternalLedgerView: React.FC = () => {
       ),
     },
     {
+      id: 'type',
+      header: 'Jenis Mutasi',
+      accessorKey: 'type',
+      sortable: true,
+      cell: (item) => {
+        const isInc = isIncomeItem(item);
+        return (
+          <span
+            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold ${
+              isInc
+                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
+                : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20'
+            }`}
+          >
+            {isInc ? '↓ Uang Masuk' : '↑ Uang Keluar'}
+          </span>
+        );
+      },
+    },
+    {
       id: 'channel',
       header: 'Channel',
       accessorKey: 'channel',
@@ -187,33 +139,41 @@ export const InternalLedgerView: React.FC = () => {
     },
     {
       id: 'providerName',
-      header: 'Gateway Provider',
+      header: 'Gateway / Merchant',
       accessorKey: 'providerName',
       sortable: true,
       cell: (item) => (
         <div className="flex items-center space-x-2">
           <BrandBadge brand={item.providerName || item.channel} size={22} />
           <span className="font-semibold text-slate-800 dark:text-slate-200">
-            {item.providerName || 'Payment Gateway'}
+            {item.providerName || 'Payment Partner'}
           </span>
         </div>
       ),
     },
     {
       id: 'amount',
-      header: 'Gross Amount',
+      header: 'Nominal Mutasi',
       accessorKey: 'amount',
       sortable: true,
       align: 'right',
-      cell: (item) => (
-        <span className="font-mono font-bold text-slate-900 dark:text-emerald-400">
-          {formatCurrency(item.amount)}
-        </span>
-      ),
+      cell: (item) => {
+        const isInc = isIncomeItem(item);
+        return (
+          <span
+            className={`font-mono font-bold ${
+              isInc ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+            }`}
+          >
+            {isInc ? '+ ' : '- '}
+            {formatCurrency(item.amount)}
+          </span>
+        );
+      },
     },
     {
       id: 'feeAmount',
-      header: 'Estimated Fee',
+      header: 'Est. Fee',
       accessorKey: 'feeAmount',
       sortable: true,
       align: 'right',
@@ -253,12 +213,84 @@ export const InternalLedgerView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
         <div>
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">Internal Financial Ledgers</h2>
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">Buku Kas & Mutasi Finansial</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Raw incoming transactions captured by internal core banking and order checkout services.
+            Pencatatan real-time seluruh mutasi Uang Masuk dan Uang Keluar dari HP Android dan Scan Nota.
+          </p>
+        </div>
+      </div>
+
+      {/* Cashflow Summary Cards (Hallmark Design System) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Uang Keluar */}
+        <div className="p-4 rounded-xl border border-rose-200 dark:border-rose-900/30 bg-rose-50/50 dark:bg-rose-950/10">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-rose-700 dark:text-rose-400">Total Uang Keluar</span>
+            <div className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400">
+              <TrendingDown className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-2 text-xl font-mono font-extrabold text-rose-600 dark:text-rose-400">
+            - {formatCurrency(totalExpense)}
+          </div>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+            Pengeluaran belanja & transaksi debit
+          </p>
+        </div>
+
+        {/* Total Uang Masuk */}
+        <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/30 bg-emerald-50/50 dark:bg-emerald-950/10">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Total Uang Masuk</span>
+            <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+              <TrendingUp className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-2 text-xl font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+            + {formatCurrency(totalIncome)}
+          </div>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+            Transfer masuk, payroll & setoran
+          </p>
+        </div>
+
+        {/* Net Cashflow */}
+        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Arus Kas Bersih (Net)</span>
+            <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <Wallet className="h-4 w-4" />
+            </div>
+          </div>
+          <div
+            className={`mt-2 text-xl font-mono font-extrabold ${
+              netCashflow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+            }`}
+          >
+            {netCashflow >= 0 ? '+ ' : ''}
+            {formatCurrency(netCashflow)}
+          </div>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+            Surplus / defisit kumulatif
+          </p>
+        </div>
+
+        {/* Total Transaksi */}
+        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Total Transaksi</span>
+            <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <Layers className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-2 text-xl font-mono font-extrabold text-slate-900 dark:text-white">
+            {data.length} <span className="text-sm font-normal text-slate-500">Mutasi</span>
+          </div>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+            {isLoading ? 'Memuat data live...' : 'Semua mutasi tervalidasi'}
           </p>
         </div>
       </div>
@@ -266,36 +298,52 @@ export const InternalLedgerView: React.FC = () => {
       <DataTable
         columns={columns}
         data={data}
-        searchPlaceholder="Filter by Transaction Ref or External Ref..."
-        searchKey={(item) => `${item.transactionRef} ${item.externalRef}`}
+        searchPlaceholder="Filter berdasarkan Ref Transaksi, Merchant, atau Kanal..."
+        searchKey={(item) => `${item.transactionRef} ${item.externalRef} ${item.providerName} ${item.type || ''}`}
         onRowClick={(item) => setSelectedItem(item)}
-        exportFileName="internal_ledgers"
+        exportFileName="mutasi_finansial_reconx"
       />
 
       {/* Detail Slide-over Drawer */}
       <DetailDrawer
         isOpen={Boolean(selectedItem)}
         onClose={() => setSelectedItem(null)}
-        title={selectedItem?.transactionRef || 'Transaction Detail'}
-        subtitle={`Channel: ${selectedItem?.channel} · External Ref: ${selectedItem?.externalRef}`}
+        title={selectedItem?.transactionRef || 'Detail Transaksi'}
+        subtitle={`Kanal: ${selectedItem?.channel} · External Ref: ${selectedItem?.externalRef}`}
       >
         {selectedItem && (
           <div className="space-y-4 text-xs">
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4 space-y-2.5">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Gross Nominal:</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-emerald-400 text-sm">
-                  {formatCurrency(selectedItem.amount)}
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Jenis Transaksi:</span>
+                <span
+                  className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                    isIncomeItem(selectedItem)
+                      ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                      : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
+                  }`}
+                >
+                  {isIncomeItem(selectedItem) ? '↓ Uang Masuk' : '↑ Uang Keluar'}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Gateway Fee:</span>
+                <span className="text-slate-500">Nominal Transaksi:</span>
+                <span
+                  className={`font-mono font-bold text-sm ${
+                    isIncomeItem(selectedItem) ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                  }`}
+                >
+                  {(isIncomeItem(selectedItem) ? '+ ' : '- ') + formatCurrency(selectedItem.amount)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Biaya / Gateway Fee:</span>
                 <span className="font-mono text-slate-700 dark:text-slate-300">
                   {formatCurrency(selectedItem.feeAmount)}
                 </span>
               </div>
               <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-2">
-                <span className="text-slate-500 font-semibold">Net Expected:</span>
+                <span className="text-slate-500 font-semibold">Net Bersih:</span>
                 <span className="font-mono font-bold text-slate-900 dark:text-white">
                   {formatCurrency(selectedItem.amount - selectedItem.feeAmount)}
                 </span>
@@ -303,12 +351,12 @@ export const InternalLedgerView: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-semibold text-slate-900 dark:text-white">System Invariants</h4>
+              <h4 className="font-semibold text-slate-900 dark:text-white">Parameter Sistem</h4>
               <div className="font-mono text-[11px] bg-slate-100 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1 text-slate-700 dark:text-slate-300">
                 <div>ID: {selectedItem.id}</div>
-                <div>Currency: {selectedItem.currency} (ISO 4217)</div>
+                <div>Mata Uang: {selectedItem.currency} (ISO 4217)</div>
                 <div>Status: {selectedItem.status}</div>
-                <div>Created: {selectedItem.createdAt}</div>
+                <div>Waktu Pembuatan: {selectedItem.createdAt}</div>
               </div>
             </div>
           </div>

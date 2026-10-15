@@ -60,7 +60,8 @@ public class TransactionsController : ControllerBase
                 t.TransactionTime,
                 t.Channel,
                 t.Status,
-                t.CreatedAt
+                t.CreatedAt,
+                t.Type
             ))
             .ToListAsync(cancellationToken);
 
@@ -99,7 +100,8 @@ public class TransactionsController : ControllerBase
             FeeAmount = dto.FeeAmount,
             Currency = dto.Currency.ToUpperInvariant(),
             TransactionTime = dto.TransactionTime,
-            Channel = dto.Channel
+            Channel = dto.Channel,
+            Type = dto.Type
         };
 
         _context.InternalTransactions.Add(trx);
@@ -117,7 +119,8 @@ public class TransactionsController : ControllerBase
             trx.TransactionTime,
             trx.Channel,
             trx.Status,
-            trx.CreatedAt
+            trx.CreatedAt,
+            trx.Type
         );
 
         return Ok(responseDto);

@@ -12,6 +12,7 @@ public class InternalTransaction
     public string Currency { get; set; } = "IDR";
     public DateTime TransactionTime { get; set; }
     public string Channel { get; set; } = "VA"; // VA, QRIS, CC, DISBURSEMENT
+    public string Type { get; set; } = "EXPENSE"; // EXPENSE (Uang Keluar / Debit) or INCOME (Uang Masuk / Credit)
     public string Status { get; set; } = "SUCCESS";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

@@ -60,6 +60,7 @@ public class AppDbContext : DbContext, IAppDbContext
             entity.Property(e => e.Amount).HasColumnType("numeric(18, 4)");
             entity.Property(e => e.FeeAmount).HasColumnType("numeric(18, 4)");
             entity.Property(e => e.Currency).HasMaxLength(3).IsRequired();
+            entity.Property(e => e.Type).HasMaxLength(20).HasDefaultValue("EXPENSE");
             entity.HasOne(e => e.Provider)
                   .WithMany(p => p.InternalTransactions)
                   .HasForeignKey(e => e.ProviderId)

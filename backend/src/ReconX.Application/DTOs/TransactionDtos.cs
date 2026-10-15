@@ -8,7 +8,8 @@ public record CreateInternalTransactionDto(
     decimal FeeAmount,
     string Currency,
     DateTime TransactionTime,
-    string Channel
+    string Channel,
+    string Type = "EXPENSE"
 );
 
 public record InternalTransactionResponseDto(
@@ -23,5 +24,6 @@ public record InternalTransactionResponseDto(
     DateTime TransactionTime,
     string Channel,
     string Status,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string Type = "EXPENSE"
 );
