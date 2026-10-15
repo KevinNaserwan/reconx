@@ -51,12 +51,13 @@ export const BrandBadge: React.FC<BrandBadgeProps> = ({
 }) => {
   const type = detectBrand(brand);
 
-  const getBrandDetails = (b: BrandType) => {
+  const getBrandDetails = (b: BrandType): { bgColor: string; name: string; logoUrl?: string; svg: React.ReactNode } => {
     switch (b) {
       case 'BCA':
         return {
           bgColor: '#00529C',
           name: 'BCA',
+          logoUrl: '/logos/bca.svg',
           svg: (
             <svg viewBox="0 0 24 24" fill="none" className="w-full h-full p-1">
               <path d="M12 2L4 6V12C4 16.5 7.5 20.8 12 22C16.5 20.8 20 16.5 20 12V6L12 2Z" fill="white" fillOpacity="0.2"/>
@@ -69,6 +70,7 @@ export const BrandBadge: React.FC<BrandBadgeProps> = ({
         return {
           bgColor: '#002D62',
           name: 'Mandiri',
+          logoUrl: '/logos/mandiri.svg',
           svg: (
             <svg viewBox="0 0 24 24" fill="none" className="w-full h-full p-1">
               <path d="M4 14C8 10 14 10 20 14" stroke="#F59E0B" strokeWidth="3" strokeLinecap="round"/>
@@ -81,6 +83,7 @@ export const BrandBadge: React.FC<BrandBadgeProps> = ({
         return {
           bgColor: '#00529C',
           name: 'BRI',
+          logoUrl: '/logos/bri.svg',
           svg: (
             <svg viewBox="0 0 24 24" fill="none" className="w-full h-full p-1">
               <rect x="4" y="4" width="16" height="16" rx="4" stroke="white" strokeWidth="2"/>
@@ -95,6 +98,7 @@ export const BrandBadge: React.FC<BrandBadgeProps> = ({
         return {
           bgColor: '#006677',
           name: 'BNI',
+          logoUrl: '/logos/bni.svg',
           svg: (
             <svg viewBox="0 0 24 24" fill="none" className="w-full h-full p-1">
               <circle cx="12" cy="12" r="8" stroke="white" strokeWidth="2"/>
@@ -108,6 +112,7 @@ export const BrandBadge: React.FC<BrandBadgeProps> = ({
         return {
           bgColor: '#F97316',
           name: 'SeaBank',
+          logoUrl: '/logos/seabank.svg',
           svg: (
             <svg viewBox="0 0 24 24" fill="none" className="w-full h-full p-1">
               <path d="M16 8C15 6.5 13 6 11.5 6.5C10 7 9 8.5 9.5 10C10 11.5 14 12 14.5 13.5C15 15 13.5 17 11.5 17.5C9.5 18 8 16.5 7.5 15.5" stroke="white" strokeWidth="2.8" strokeLinecap="round"/>
@@ -119,6 +124,7 @@ export const BrandBadge: React.FC<BrandBadgeProps> = ({
         return {
           bgColor: '#6D28D9',
           name: 'Superbank',
+          logoUrl: '/logos/superbank.svg',
           svg: (
             <svg viewBox="0 0 24 24" fill="none" className="w-full h-full p-1">
               <path d="M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z" stroke="#84CC16" strokeWidth="2.2" strokeLinejoin="round"/>
@@ -131,6 +137,7 @@ export const BrandBadge: React.FC<BrandBadgeProps> = ({
         return {
           bgColor: '#00AED6',
           name: 'GoPay',
+          logoUrl: '/logos/gopay.svg',
           svg: (
             <svg viewBox="0 0 24 24" fill="none" className="w-full h-full p-1">
               <circle cx="12" cy="12" r="7.5" stroke="white" strokeWidth="2.6"/>
@@ -142,6 +149,7 @@ export const BrandBadge: React.FC<BrandBadgeProps> = ({
         return {
           bgColor: '#4C3494',
           name: 'OVO',
+          logoUrl: '/logos/ovo.svg',
           svg: (
             <svg viewBox="0 0 24 24" fill="none" className="w-full h-full p-1">
               <circle cx="12" cy="12" r="7.5" stroke="white" strokeWidth="2.8"/>
@@ -153,6 +161,7 @@ export const BrandBadge: React.FC<BrandBadgeProps> = ({
         return {
           bgColor: '#118EEA',
           name: 'DANA',
+          logoUrl: '/logos/dana.svg',
           svg: (
             <svg viewBox="0 0 24 24" fill="none" className="w-full h-full p-1">
               <path d="M12 3L20 12L12 21L4 12L12 3Z" fill="white" fillOpacity="0.2"/>
@@ -165,6 +174,7 @@ export const BrandBadge: React.FC<BrandBadgeProps> = ({
         return {
           bgColor: '#EE4D2D',
           name: 'ShopeePay',
+          logoUrl: '/logos/shopeepay.svg',
           svg: (
             <svg viewBox="0 0 24 24" fill="none" className="w-full h-full p-1">
               <path d="M6 9H18V19C18 20.1046 17.1046 21 16 21H8C6.89543 21 6 20.1046 6 19V9Z" stroke="white" strokeWidth="2" strokeLinejoin="round"/>
@@ -177,6 +187,7 @@ export const BrandBadge: React.FC<BrandBadgeProps> = ({
         return {
           bgColor: '#D32F2F',
           name: 'QRIS',
+          logoUrl: '/logos/qris.svg',
           svg: (
             <svg viewBox="0 0 24 24" fill="none" className="w-full h-full p-1">
               <rect x="4" y="4" width="6" height="6" rx="1.5" stroke="white" strokeWidth="2"/>
@@ -239,10 +250,21 @@ export const BrandBadge: React.FC<BrandBadgeProps> = ({
           height: size,
           backgroundColor: details.bgColor,
         }}
-        className="rounded-lg flex items-center justify-center shrink-0 shadow-xs border border-white/10"
+        className="rounded-lg flex items-center justify-center shrink-0 shadow-xs border border-white/10 overflow-hidden"
         title={details.name}
       >
-        {details.svg}
+        {details.logoUrl ? (
+          <img
+            src={details.logoUrl}
+            alt={details.name}
+            className="w-full h-full object-contain p-0.5"
+            onError={(e) => {
+              (e.currentTarget as HTMLElement).style.display = 'none';
+            }}
+          />
+        ) : (
+          details.svg
+        )}
       </div>
       {showLabel && (
         <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
