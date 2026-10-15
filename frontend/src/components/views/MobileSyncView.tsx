@@ -258,7 +258,7 @@ export const MobileSyncView: React.FC = () => {
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <span>Download ReconX Companion Android APK</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-600 text-white">v1.0.0</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-600 text-white">v1.3.13</span>
             </h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
               Pasang aplikasi di HP Android Mas Kevin untuk menangkap notifikasi transaksi otomatis (BCA, Superbank, SeaBank, Mandiri, Shopee, OVO, Bibit, Pluang).

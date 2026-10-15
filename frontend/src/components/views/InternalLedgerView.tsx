@@ -212,6 +212,24 @@ export const InternalLedgerView: React.FC = () => {
     },
   ];
 
+  const [activeFilter, setActiveFilter] = useState<string>('ALL');
+
+  const filteredData = data.filter((item) => {
+    const isInc = isIncomeItem(item);
+    if (activeFilter === 'EXPENSE') return !isInc;
+    if (activeFilter === 'INCOME') return isInc;
+    if (activeFilter === 'RECEIPT') return item.channel.toLowerCase().includes('receipt') || item.providerName.toLowerCase().includes('nota');
+    if (activeFilter === 'QRIS') {
+      const ch = `${item.channel} ${item.providerName}`.toLowerCase();
+      return ch.includes('qris') || ch.includes('gopay') || ch.includes('ovo') || ch.includes('dana') || ch.includes('shopee');
+    }
+    if (activeFilter === 'BANK') {
+      const ch = `${item.channel} ${item.providerName}`.toLowerCase();
+      return ch.includes('bca') || ch.includes('mandiri') || ch.includes('bri') || ch.includes('bni') || ch.includes('seabank') || ch.includes('bank');
+    }
+    return true;
+  });
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -295,9 +313,42 @@ export const InternalLedgerView: React.FC = () => {
         </div>
       </div>
 
+      {/* Source Filter Tabs */}
+      <div className="flex flex-wrap items-center gap-2 pt-1 pb-1">
+        {[
+          { key: 'ALL', label: 'Semua Mutasi', count: data.length },
+          { key: 'EXPENSE', label: '↑ Uang Keluar', count: data.filter((d) => !isIncomeItem(d)).length },
+          { key: 'INCOME', label: '↓ Uang Masuk', count: data.filter((d) => isIncomeItem(d)).length },
+          { key: 'RECEIPT', label: '📸 Scan Nota Fisik', count: data.filter((d) => d.channel.toLowerCase().includes('receipt') || d.providerName.toLowerCase().includes('nota')).length },
+          { key: 'QRIS', label: '⚡ QRIS & E-Wallet', count: data.filter((d) => `${d.channel} ${d.providerName}`.toLowerCase().match(/qris|gopay|ovo|dana|shopee/)).length },
+          { key: 'BANK', label: '🏦 Transfer Bank', count: data.filter((d) => `${d.channel} ${d.providerName}`.toLowerCase().match(/bca|mandiri|bri|bni|seabank|bank/)).length },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveFilter(tab.key)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              activeFilter === tab.key
+                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            <span>{tab.label}</span>
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                activeFilter === tab.key
+                  ? 'bg-slate-700 text-slate-200 dark:bg-slate-200 dark:text-slate-800'
+                  : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+              }`}
+            >
+              {tab.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <DataTable
         columns={columns}
-        data={data}
+        data={filteredData}
         searchPlaceholder="Filter berdasarkan Ref Transaksi, Merchant, atau Kanal..."
         searchKey={(item) => `${item.transactionRef} ${item.externalRef} ${item.providerName} ${item.type || ''}`}
         onRowClick={(item) => setSelectedItem(item)}
