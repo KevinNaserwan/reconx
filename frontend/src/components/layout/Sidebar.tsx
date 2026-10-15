@@ -173,7 +173,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {isCollapsedDesktop ? (
             <div 
               className="flex items-center justify-center h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-indigo-500 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Household Cluster: Keluarga Kevin & Istri"
+              title="Couple Cluster: Kevin & Anan (Couple)"
               onClick={() => setIsCollapsedDesktop(false)}
             >
               <Users className="h-5 w-5" />
@@ -186,9 +186,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm leading-tight">
-                    {user?.tenant || 'Keluarga Kevin & Istri'}
+                    {user?.tenant || 'Kevin & Anan (Couple)'}
                   </p>
-                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">Household Financial Cluster</p>
+                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">Couple Financial Cluster</p>
                 </div>
               </div>
               <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" title="Multi-Tenant Sync Active" />
@@ -278,12 +278,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }`}>
           {isCollapsedDesktop ? (
             <div className="flex flex-col items-center space-y-2">
-              <div 
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-xs ring-2 ring-emerald-500/20 cursor-pointer hover:ring-emerald-500 transition-all"
-                title={`${user?.name || 'Kevin Naserwan'} — ${user?.role || 'User'}`}
-              >
-                {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'KN'}
-              </div>
+              {user?.picture ? (
+                <img 
+                  src={user.picture} 
+                  alt={user?.name || 'Avatar'} 
+                  className="w-10 h-10 rounded-full object-cover border border-slate-300 dark:border-slate-700 ring-2 ring-emerald-500/20 cursor-pointer hover:ring-emerald-500 transition-all"
+                  title={`${user?.name || 'Kevin Naserwan'} — ${user?.role || 'Kevin (Partner)'}`}
+                />
+              ) : (
+                <div 
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-xs ring-2 ring-emerald-500/20 cursor-pointer hover:ring-emerald-500 transition-all"
+                  title={`${user?.name || 'Kevin Naserwan'} — ${user?.role || 'Kevin (Partner)'}`}
+                >
+                  {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'KN'}
+                </div>
+              )}
               <button
                 onClick={() => {
                   logout();
@@ -298,15 +307,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ) : (
             <div className="flex items-center justify-between rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors">
               <div className="flex items-center space-x-3 min-w-0 flex-1">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-sm ring-2 ring-emerald-500/20 shrink-0">
-                  {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'KN'}
-                </div>
+                {user?.picture ? (
+                  <img 
+                    src={user.picture} 
+                    alt={user?.name || 'Avatar'} 
+                    className="w-10 h-10 rounded-full object-cover border border-slate-300 dark:border-slate-700 ring-2 ring-emerald-500/20 shrink-0" 
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold text-sm ring-2 ring-emerald-500/20 shrink-0">
+                    {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'KN'}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate leading-tight">
                     {user?.name || 'Kevin Naserwan'}
                   </p>
                   <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold truncate mt-0.5">
-                    {user?.role || 'Fintech Lead Architect'}
+                    {user?.role || 'Kevin (Partner)'}
                   </p>
                 </div>
               </div>

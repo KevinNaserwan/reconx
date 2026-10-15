@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 import { useAuth } from '../auth/AuthContext';
+import { BrandBadge } from '../ui/BrandBadge';
 
 interface WalletItem {
   id: string;
@@ -257,7 +258,7 @@ export const FamilyModeView: React.FC<{ activeMode: 'personal' | 'family'; onSwi
               {familyData.name}
             </h1>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
-              Platform rekonsiliasi finansial bersama untuk Suami, Istri, dan Keluarga. Setiap anggota memiliki dompet mandiri, anti-dobel hitung transaksi internal, dan ringkasan kekayaan bersih terpusat.
+              Platform rekonsiliasi finansial bersama untuk pasangan (Kevin & Anan). Setiap partner memiliki dompet mandiri, anti-dobel hitung transaksi internal (transfer Kevin-Anan), dan ringkasan kekayaan bersama.
             </p>
           </div>
 
@@ -474,8 +475,8 @@ export const FamilyModeView: React.FC<{ activeMode: 'personal' | 'family'; onSwi
                     className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 bg-slate-50/40 dark:bg-slate-800/20 transition-all flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 shadow-xs shrink-0">
-                        {getWalletIcon(wallet.icon)}
+                      <div className="shrink-0">
+                        <BrandBadge brand={wallet.app || wallet.name} size={36} />
                       </div>
                       <div className="min-w-0">
                         <div className="text-xs font-semibold text-slate-900 dark:text-white truncate">
@@ -525,10 +526,10 @@ export const FamilyModeView: React.FC<{ activeMode: 'personal' | 'family'; onSwi
           <div>
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <ArrowRightLeft className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-              Transfer Internal Antar-Anggota Keluarga (Auto-Deduplicated)
+              Transfer Internal Antar-Pasangan (Auto-Deduplicated)
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Ketika antar-anggota mentransfer dana (misal belanja kebutuhan / nafkah), ReconX mendeteksi kedua mutasi dan mengeliminasi transaksi internal agar tidak dobel hitung di laporan.
+              Ketika Kevin atau Anan saling mentransfer dana (misal tabungan bersama / belanja bersama), ReconX otomatis mengeliminasi transaksi internal agar tidak dihitung ganda sebagai pengeluaran di dashboard.
             </p>
           </div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
@@ -539,9 +540,9 @@ export const FamilyModeView: React.FC<{ activeMode: 'personal' | 'family'; onSwi
         {familyData.internalTransfers.length === 0 ? (
           <div className="p-8 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl my-2">
             <ArrowRightLeft className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Belum Ada Transaksi Internal Keluarga</p>
+            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Belum Ada Transaksi Internal Pasangan</p>
             <p className="text-[11px] text-slate-400 max-w-md mx-auto mt-1">
-              Semua mutasi antar rekening keluarga (seperti transfer uang belanja atau nafkah) akan langsung dideteksi dan dicatat di sini tanpa menambah pengeluaran eksternal.
+              Semua transfer antara Kevin dan Anan akan otomatis terdeteksi dan diisolasi di sini sehingga neraca pengeluaran bersama tetap bersih dan akurat.
             </p>
           </div>
         ) : (

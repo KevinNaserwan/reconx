@@ -16,7 +16,7 @@ export default function LoginPage() {
   const [action, setAction] = useState<'create_family' | 'join_family'>('create_family');
   const [familyName, setFamilyName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
-  const [role, setRole] = useState('Head of Household (Kepala Keluarga)');
+  const [role, setRole] = useState('Partner / Pasangan');
   
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,9 +79,9 @@ export default function LoginPage() {
           email,
           password: password || 'reconx123',
           action,
-          familyName: action === 'create_family' ? (familyName || `Keluarga ${name}`) : undefined,
+          familyName: action === 'create_family' ? (familyName || `${name || 'Kevin'} & Partner (Couple)`) : undefined,
           inviteCode: action === 'join_family' ? inviteCode : undefined,
-          role: action === 'create_family' ? 'Head of Household (Kepala Keluarga)' : role,
+          role: action === 'create_family' ? 'Partner / Pasangan' : role,
         };
 
         const res = await register(payload);
@@ -269,25 +269,25 @@ export default function LoginPage() {
 
               {action === 'create_family' ? (
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Nama Cluster / Nama Keluarga</label>
+                  <label className="block text-[11px] font-semibold text-slate-400 mb-1">Nama Tracking Cluster Pasangan</label>
                   <input
                     type="text"
-                    placeholder={`Contoh: Keluarga ${name || 'Saya'}`}
+                    placeholder="Contoh: Kevin & Anan (Couple)"
                     value={familyName}
                     onChange={(e) => setFamilyName(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400"
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">Anda akan otomatis menjadi Kepala Keluarga (Head of Household).</p>
+                  <p className="text-[10px] text-slate-500 mt-1">Anda akan otomatis terdaftar sebagai partner dalam cluster bersama.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">PIN Undangan Keluarga</label>
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">PIN Undangan Pasangan</label>
                     <div className="relative">
                       <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
                       <input
                         type="text"
-                        placeholder="Contoh: FAM-KVN-8821"
+                        placeholder="Contoh: COUPLE-KVN-ANN"
                         value={inviteCode}
                         onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                         className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-cyan-300 placeholder-slate-600 focus:outline-none focus:border-indigo-400"
@@ -295,17 +295,16 @@ export default function LoginPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">Peran dalam Keluarga</label>
+                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">Peran Finansial</label>
                     <select
                       value={role}
                       onChange={(e) => setRole(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-400"
                     >
-                      <option value="Istri / Pasangan">Istri / Pasangan</option>
-                      <option value="Suami / Pasangan">Suami / Pasangan</option>
-                      <option value="Anak">Anak</option>
-                      <option value="Orang Tua">Orang Tua</option>
-                      <option value="Anggota Mandiri">Anggota Mandiri</option>
+                      <option value="Partner / Pasangan">Partner / Pasangan</option>
+                      <option value="Kevin (Partner)">Kevin (Partner)</option>
+                      <option value="Anan (Partner)">Anan (Partner)</option>
+                      <option value="Personal / Mandiri">Personal / Mandiri</option>
                     </select>
                   </div>
                 </div>

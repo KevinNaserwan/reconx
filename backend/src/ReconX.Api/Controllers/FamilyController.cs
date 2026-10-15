@@ -73,12 +73,12 @@ public class FamilyController : ControllerBase
 
     static FamilyController()
     {
-        // Seed initial family cluster: Keluarga Kevin & Istri (Zero State)
+        // Seed initial couple tracking cluster: Kevin & Anan (Couple)
         var kevinFamily = new FamilyGroupState
         {
             FamilyId = "fam-kevin-001",
-            FamilyName = "Keluarga Kevin & Istri",
-            InviteCode = "FAM-KVN-8821",
+            FamilyName = "Kevin & Anan (Couple)",
+            InviteCode = "COUPLE-KVN-ANN",
             Head = "Kevin Naserwan",
             Members = new List<MemberDto>
             {
@@ -86,12 +86,31 @@ public class FamilyController : ControllerBase
                 {
                     Id = "mem-kevin",
                     Name = "Kevin Naserwan",
-                    Role = "Suami (Head of Family)",
+                    Role = "Kevin (Partner)",
                     Avatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin",
-                    Device = "Belum Terhubung (Menunggu Companion APK)",
-                    DeviceStatus = "OFFLINE",
+                    Device = "Android Companion APK (Reconx)",
+                    DeviceStatus = "ONLINE",
                     IsCurrentProfile = true,
-                    Wallets = new List<WalletDto>()
+                    Wallets = new List<WalletDto>
+                    {
+                        new WalletDto { Id = "w-bca-01", Name = "BCA Prioritas", Type = "BANK", AccountNo = "8829102938", Balance = 12500000, IsShared = true, App = "BCA mobile", Icon = "Landmark" },
+                        new WalletDto { Id = "w-gopay-01", Name = "GoPay Kevin", Type = "EWALLET", AccountNo = "081234567890", Balance = 850000, IsShared = true, App = "GoPay", Icon = "Zap" },
+                    }
+                },
+                new MemberDto
+                {
+                    Id = "mem-anan",
+                    Name = "Anan",
+                    Role = "Anan (Partner)",
+                    Avatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=Anan",
+                    Device = "Android Companion APK (Reconx)",
+                    DeviceStatus = "ONLINE",
+                    IsCurrentProfile = false,
+                    Wallets = new List<WalletDto>
+                    {
+                        new WalletDto { Id = "w-seabank-02", Name = "SeaBank Anan", Type = "BANK", AccountNo = "9012948192", Balance = 6200000, IsShared = true, App = "SeaBank", Icon = "Landmark" },
+                        new WalletDto { Id = "w-shopee-02", Name = "ShopeePay Anan", Type = "EWALLET", AccountNo = "081398765432", Balance = 420000, IsShared = true, App = "ShopeePay", Icon = "ShoppingBag" },
+                    }
                 }
             }
         };

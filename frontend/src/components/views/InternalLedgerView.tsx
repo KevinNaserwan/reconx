@@ -5,6 +5,7 @@ import { DataTable, ColumnDef } from '../ui/DataTable';
 import { API_BASE_URL } from '@/lib/api';
 import { CreditCard, QrCode, Landmark, ArrowDownLeft, Eye } from 'lucide-react';
 import { DetailDrawer } from '../ui/DetailDrawer';
+import { BrandBadge } from '../ui/BrandBadge';
 
 interface InternalTransactionItem {
   id: string;
@@ -190,9 +191,12 @@ export const InternalLedgerView: React.FC = () => {
       accessorKey: 'providerName',
       sortable: true,
       cell: (item) => (
-        <span className="rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:text-slate-300">
-          {item.providerName || 'Payment Gateway'}
-        </span>
+        <div className="flex items-center space-x-2">
+          <BrandBadge brand={item.providerName || item.channel} size={22} />
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
+            {item.providerName || 'Payment Gateway'}
+          </span>
+        </div>
       ),
     },
     {

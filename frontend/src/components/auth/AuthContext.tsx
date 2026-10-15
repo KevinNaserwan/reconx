@@ -106,11 +106,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name,
         email,
         picture,
-        role: customData?.role || 'Head of Household (Suami)',
-        tenant: customData?.familyName || 'Keluarga Kevin & Istri',
+        role: customData?.role || 'Kevin (Partner)',
+        tenant: customData?.familyName || 'Kevin & Anan (Couple)',
         familyId: customData?.familyId || 'fam-kevin-001',
-        familyName: customData?.familyName || 'Keluarga Kevin & Istri',
-        familyInviteCode: customData?.familyInviteCode || 'FAM-KVN-8821',
+        familyName: customData?.familyName || 'Kevin & Anan (Couple)',
+        familyInviteCode: customData?.familyInviteCode || 'COUPLE-KVN-ANN',
         activeMode: activeMode,
       };
 
@@ -134,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               id: data.user.id,
               name: data.user.name,
               email: data.user.email,
+              picture: data.user.picture || profile.picture,
               role: data.user.role,
               familyId: data.user.familyId,
               familyName: data.user.familyName,

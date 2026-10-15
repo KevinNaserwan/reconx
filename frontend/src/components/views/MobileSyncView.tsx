@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 import { useAuth } from '../auth/AuthContext';
+import { BrandBadge } from '../ui/BrandBadge';
 
 export const MobileSyncView: React.FC = () => {
   const { user } = useAuth();
@@ -367,11 +368,11 @@ export const MobileSyncView: React.FC = () => {
                   : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
-              <div className="flex items-center space-x-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span className={`text-xs font-bold truncate ${app.color}`}>{app.name}</span>
+              <div className="flex items-center space-x-2">
+                <BrandBadge brand={app.name} size={24} />
+                <span className="text-xs font-bold truncate text-slate-800 dark:text-slate-200">{app.name}</span>
               </div>
-              <p className="text-[10px] text-slate-400 truncate mt-1 font-mono">{app.pkg}</p>
+              <p className="text-[10px] text-slate-400 truncate mt-1.5 font-mono">{app.pkg}</p>
             </button>
           ))}
         </div>

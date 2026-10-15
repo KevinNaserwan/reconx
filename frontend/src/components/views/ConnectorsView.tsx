@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Send } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
+import { BrandBadge } from '../ui/BrandBadge';
 
 export const ConnectorsView: React.FC = () => {
   const [simulating, setSimulating] = useState(false);
@@ -162,14 +163,17 @@ export const ConnectorsView: React.FC = () => {
             className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 shadow-card hover:shadow-elevated transition-all space-y-3"
           >
             <div className="flex items-start justify-between">
-              <div>
-                <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 block tracking-wider">
-                  {c.id}
-                </span>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
-                  {c.name}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{c.type}</p>
+              <div className="flex items-start gap-3">
+                <BrandBadge brand={c.id || c.name} size={36} />
+                <div>
+                  <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 block tracking-wider">
+                    {c.id}
+                  </span>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+                    {c.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{c.type}</p>
+                </div>
               </div>
               <span
                 className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${

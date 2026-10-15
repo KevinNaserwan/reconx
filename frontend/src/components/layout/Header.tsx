@@ -94,16 +94,20 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* User Account Info */}
-        <div className="flex items-center space-x-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 px-2.5 py-1.5">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-white font-bold text-[10px] ring-1 ring-emerald-500">
-            {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'KN'}
-          </div>
+        <div className="flex items-center space-x-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 px-2.5 py-1.5">
+          {user?.picture ? (
+            <img src={user.picture} alt={user?.name || 'Avatar'} className="w-7 h-7 rounded-full object-cover ring-1 ring-emerald-500" />
+          ) : (
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white font-bold text-[10px] ring-1 ring-emerald-500">
+              {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 'KN'}
+            </div>
+          )}
           <div className="hidden sm:block text-left">
             <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-none">
               {user?.name || 'Kevin Naserwan'}
             </p>
             <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold leading-tight mt-0.5">
-              {user?.familyName || 'Keluarga Kevin & Istri'}
+              {user?.familyName || 'Kevin & Anan (Couple)'}
             </p>
           </div>
         </div>

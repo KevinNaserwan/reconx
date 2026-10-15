@@ -33,10 +33,10 @@ public class AuthController : ControllerBase
             Email = "kevin.naserwan@gmail.com",
             Name = "Kevin Naserwan",
             Picture = "https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin",
-            Role = "Head of Household (Suami)",
+            Role = "Kevin (Partner)",
             FamilyId = "fam-kevin-001",
-            FamilyName = "Keluarga Kevin & Istri",
-            FamilyInviteCode = "FAM-KVN-8821"
+            FamilyName = "Kevin & Anan (Couple)",
+            FamilyInviteCode = "COUPLE-KVN-ANN"
         };
         UsersByEmail[kevin.Email] = kevin;
     }
@@ -231,12 +231,23 @@ public class AuthController : ControllerBase
             ? request.Picture 
             : $"https://api.dicebear.com/7.x/avataaars/svg?seed={Uri.EscapeDataString(name)}";
 
-        if (!UsersByEmail.TryGetValue(email, out var user))
+        if (UsersByEmail.TryGetValue(email, out var user))
+        {
+            if (!string.IsNullOrWhiteSpace(request.Picture))
+            {
+                user.Picture = request.Picture;
+            }
+            if (!string.IsNullOrWhiteSpace(request.Name))
+            {
+                user.Name = request.Name;
+            }
+        }
+        else
         {
             string familyId;
             string familyName;
             string inviteCode;
-            string role = !string.IsNullOrWhiteSpace(request.Role) ? request.Role : "Head of Household";
+            string role = !string.IsNullOrWhiteSpace(request.Role) ? request.Role : "Kevin (Partner)";
 
             if (request.Action == "join_family" && !string.IsNullOrWhiteSpace(request.InviteCode))
             {
@@ -247,24 +258,22 @@ public class AuthController : ControllerBase
                     familyId = targetFamily.FamilyId;
                     familyName = targetFamily.FamilyName;
                     inviteCode = targetFamily.InviteCode;
-                    role = !string.IsNullOrWhiteSpace(request.Role) ? request.Role : "Anggota Keluarga";
+                    role = !string.IsNullOrWhiteSpace(request.Role) ? request.Role : "Partner";
                     FamilyController.AddMemberToFamily(familyId, name, role);
                 }
                 else
                 {
-                    familyName = $"Keluarga {name}";
-                    inviteCode = $"FAM-{new Random().Next(1000, 9999)}";
+                    familyName = $"{name} (Couple)";
+                    inviteCode = "COUPLE-KVN-ANN";
                     familyId = $"fam-{Guid.NewGuid().ToString()[..8]}";
                     FamilyController.RegisterNewFamily(familyId, familyName, inviteCode, name, role);
                 }
             }
             else
             {
-                familyName = !string.IsNullOrWhiteSpace(request.FamilyName) ? request.FamilyName : $"Keluarga {name}";
-                var shortCode = new string(name.Where(char.IsLetter).Take(3).ToArray()).ToUpperInvariant();
-                if (shortCode.Length < 3) shortCode = "FAM";
-                inviteCode = $"FAM-{shortCode}-{new Random().Next(1000, 9999)}";
-                familyId = $"fam-{Guid.NewGuid().ToString()[..8]}";
+                familyName = !string.IsNullOrWhiteSpace(request.FamilyName) ? request.FamilyName : "Kevin & Anan (Couple)";
+                inviteCode = "COUPLE-KVN-ANN";
+                familyId = "fam-kevin-001";
                 FamilyController.RegisterNewFamily(familyId, familyName, inviteCode, name, role);
             }
 
