@@ -51,35 +51,10 @@ jobs:
           mkdir -p android/app/src/main/kotlin/com/reconx/agent/reconx_mobile
           cp custom_android/MainActivity.kt android/app/src/main/kotlin/com/reconx/agent/reconx_mobile/MainActivity.kt
           cp custom_android/ReconXNotificationListener.kt android/app/src/main/kotlin/com/reconx/agent/reconx_mobile/ReconXNotificationListener.kt
-          python3 -c "
-          import re
-          with open('android/app/src/main/AndroidManifest.xml', 'r') as f:
-              c = f.read()
-          perms = '''
-              <uses-permission android:name=\"android.permission.INTERNET\"/>
-              <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>
-              <uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\"/>
-              <uses-permission android:name=\"android.permission.CAMERA\"/>
-              <uses-permission android:name=\"android.permission.USE_BIOMETRIC\"/>
-              <uses-permission android:name=\"android.permission.USE_FINGERPRINT\"/>
-          '''
-          srv = '''
-                  <service
-                      android:name=\"com.reconx.agent.reconx_mobile.ReconXNotificationListener\"
-                      android:label=\"ReconX Financial Notification Interceptor\"
-                      android:permission=\"android.permission.BIND_NOTIFICATION_LISTENER_SERVICE\"
-                      android:exported=\"true\">
-                      <intent-filter>
-                          <action android:name=\"android.service.notification.NotificationListenerService\" />
-                      </intent-filter>
-                  </service>
-          '''
-          c = c.replace('<application', perms + '    <application', 1)
-          c = c.replace('</application>', srv + '    </application>', 1)
-          c = re.sub(r'android:label=\"[^\"]*\"', 'android:label=\"Reconx\"', c)
-          with open('android/app/src/main/AndroidManifest.xml', 'w') as f:
-              f.write(c)
-          "
+          mkdir -p ~/.android
+          cp custom_android/debug.keystore ~/.android/debug.keystore
+          cp custom_android/reconx-release.jks android/app/reconx-release.jks
+          python3 custom_android/configure_android.py
 
       - name: Install Dependencies
         run: flutter pub get
@@ -139,6 +114,8 @@ jobs:
           fi
           echo "Found APK: $APK_FILE"
           mkdir -p dist
+          cp "$APK_FILE" dist/Reconx-v1.3.1.apk
+          cp "$APK_FILE" dist/Reconx-v1.3.0.apk
           cp "$APK_FILE" dist/Reconx-v1.2.0.apk
           cp "$APK_FILE" dist/ReconX-Companion-v1.1.0.apk
           ls -lh dist/
@@ -146,35 +123,40 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Reconx-v1.2.0-APK
-          path: dist/Reconx-v1.2.0.apk
+          name: Reconx-v1.3.1-APK
+          path: dist/Reconx-v1.3.1.apk
           retention-days: 30
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.2.0
-          name: "Reconx Android v1.2.0"
+          tag_name: v1.3.1
+          name: "Reconx Android v1.3.1 (Enterprise Ready)"
           draft: false
           prerelease: false
           overwrite: true
           body: |
-            ### Reconx Android v1.2.0 Release
+            ### Reconx Android v1.3.1 Enterprise Release
             
-            Pembaruan resmi aplikasi Android **Reconx** — Family & Personal Financial Clearing Engine.
+            Pembaruan besar antarmuka (UI/UX), arsitektur keamanan, dan fitur enterprise aplikasi Android **Reconx**:
             
-            - 🏷️ **App Name:** Resmi diubah menjadi **Reconx** pada launcher HP Android.
-            - 🛡️ **Zero Blank Fix:** Perbaikan penanganan locale intl dan dynamic body switcher anti-blank abu-abu pada seluruh tab (Mutasi, Scan Nota, Keluarga, & Akun).
-            - 📷 **Proactive Permission Dialog:** Dialog izin akses otomatis saat aplikasi dibuka (Kamera, Notifikasi, & Interseptor Mutasi).
-            - 📸 **Kamera & Scan Nota:** Pemeriksaan runtime permission sebelum memotret struk fisik & QRIS.
-            - 🌐 **Clean Login & Google Branding:** Desain halaman login baru dengan official Google 4-color asset dan tab register terintegrasi.
-            - 🧹 **Pembersihan Fitur Test:** Tombol simulasi test notifikasi dihapus dari halaman Beranda untuk tampilan produksi yang bersih.
+            - 🌐 **Multilingual Language Support:** Pilihan 3 bahasa resmi: **Bahasa Indonesia (ID)**, **English (EN)**, dan **Chinese (ZH - 中文)**.
+            - 👁️ **Enterprise Privacy Balance Masking:** Mode privasi sensor nominal saldo (ikon mata 👁️) untuk keamanan di tempat umum.
+            - 🌓 **White & Dark Mode:** Dukungan tema Terang (White) dan Gelap (Dark) yang fleksibel dengan toggle instan.
+            - 🏷️ **Custom Brand Badges:** Icon transaksi bervariasi dengan visual brand resmi (QRIS, GoPay, OVO, DANA, ShopeePay, BCA, Mandiri, BRI, SeaBank, dll.) menggantikan centang generic.
+            - 📊 **CSV Export & Audit Trail:** Kemampuan ekspor seluruh mutasi finansial keluarga ke format CSV langsung disalin ke clipboard untuk Excel / Google Sheets.
+            - 🔔 **Filter Notifikasi Bank & E-Wallet:** Kontrol penuh untuk memilih sumber aplikasi finansial mana saja yang diizinkan untuk dibaca dan disinkronkan.
+            - 📷 **Viewfinder Scanner Ala GoPay:** Antarmuka scanner in-app modern dengan animasi laser scanning, glowing corner brackets, dan kontrol senter/galeri.
+            - 🎟️ **Voucher PIN Undangan Rapi:** Kartu PIN keluarga yang lebih rapi, elegan, dan mudah disalin untuk menghubungkan akun pasangan.
+            - 👤 **Lengkapi Data Profil:** Dialog pengaturan data pribadi (Nama, Email, WhatsApp, Peran Finansial Keluarga).
+            - 🚪 **Tombol Logout Merah & Pembersihan:** Tombol keluar beraksen merah tegas dan pembersihan tombol redundant di beranda.
+            - 🛡️ **Persistent Keystore:** Kunci sertifikat resmi permanen untuk update mulus tanpa bentrok paket.
             
             #### 📥 Download Langsung:
-            Download file **`Reconx-v1.2.0.apk`** di bawah ini dan install langsung di HP Android Anda.
+            Download file **`Reconx-v1.3.1.apk`** di bawah ini dan install langsung di HP Android Anda.
           files: |
-            dist/Reconx-v1.2.0.apk
-            dist/ReconX-Companion-v1.1.0.apk
+            dist/Reconx-v1.3.1.apk
+            dist/Reconx-v1.3.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
